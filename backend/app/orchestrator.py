@@ -1,24 +1,52 @@
 import os
 from dotenv import load_dotenv
 import google.generativeai as genai
+# نیازی به وارد کردن این موارد نیست مگر برای تنظیمات پیشرفته
+# from google.generativeai.types import HarmCategory, HarmBlockThreshold 
 
-load_dotenv()  # بارگذاری متغیرهای محیطی
+load_dotenv()  # بارگذاری متغیرهای محیطی از فایل .env
 
-# تنظیم کلاینت Gemini
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# بررسی کلید API به صورت سراسری
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+model = None # تعریف اولیه مدل
 
-# ساخت مدل با پرامپت سیستم (اینجا اضافه می‌شه)
-model = genai.GenerativeModel(
-    'gemini-2.5-flash',
-    system_instruction="تو یک دستیار مفید و باهوش هستی که به زبان فارسی پاسخ می‌دی."  # پرامپت سیستم خودت رو بنویس
-)
+if not GEMINI_API_KEY:
+    print("⚠️ خطا: متغیر محیطی GEMINI_API_KEY تنظیم نشده است!")
+else:
+    try:
+        # تنظیم کلاینت Gemini
+        genai.configure(api_key=GEMINI_API_KEY)
+
+        # ساخت مدل با پرامپت سیستم
+        model = genai.GenerativeModel(
+            'gemini-2.5-flash',
+            system_instruction="تو یک دستیار مفید و باهوش هستی که به زبان فارسی پاسخ می‌دی و سوالات دانشجویی پاسخ میدی."
+        )
+    except Exception as e:
+        print(f"⚠️ خطا در تنظیم Gemini API: {str(e)}")
+        # در صورت شکست، مدل همچنان None خواهد بود
 
 def get_reply_user(user_text: str) -> str:
     """
     این تابع متن کاربر رو می‌گیره و از Google Gemini پاسخ واقعی می‌گیره.
     """
+    # بررسی مدل قبل از استفاده (برای مدیریت خطای API Key)
+    if model is None:
+        return "⚠️ خطای تنظیمات بک‌اند: کلید API (GEMINI_API_KEY) احتمالاً تنظیم نشده یا نامعتبر است. لطفاً فایل‌های پیکربندی را بررسی کنید."
+
     try:
-        response = model.generate_content(user_text)  # مستقیم متن کاربر رو بده؛ پرامپت سیستم قبلاً تنظیم شده
-        return response.text.strip()
+        # استفاده از ابزار جستجوی گوگل برای پاسخ‌های به‌روز (با tools=[{"google_search": {}}])
+        response = model.generate_content(
+            user_text,
+            tools=[{"google_search": {}}]
+        )
+        
+        # بررسی محتوای پاسخ
+        if response.text:
+            return response.text.strip()
+        else:
+            return "پاسخی از مدل دریافت نشد. شاید به دلیل محتوای نامناسب مسدود شده باشد."
+
     except Exception as e:
-        return f"خطا در گرفتن پاسخ: {str(e)}"
+        # خطای زمان اجرای API
+        return f"خطا در گرفتن پاسخ از Gemini: {str(e)}"
