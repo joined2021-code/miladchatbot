@@ -3,82 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>چت‌بات دانشجویی (رابط کاربری ساده)</title>
-    <!-- بارگذاری Tailwind CSS برای استایل‌دهی سریع و مدرن -->
+    <title>💬 چت‌بات دانشجویی </title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
-        /* تنظیم فونت برای نمایش بهتر زبان فارسی */
+        /* تنظیمات کلی بدنه و طرح */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fc;
+            font-family: 'Inter', Tahoma, sans-serif;
+            background: linear-gradient(180deg,#f1f5f9 0%, #eef2ff 100%);
         }
-        /* استایل خاص برای حباب‌های پیام */
+        /* استایل‌های بالون پیام‌ها */
         .message-bubble {
-            max-width: 80%;
-            padding: 10px 15px;
-            border-radius: 1.5rem; /* گوشه‌های گردتر */
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
+            max-width: 85%; /* افزایش جزئی برای خوانایی بهتر */
+            padding: 12px 18px; /* پدینگ بیشتر برای حس مدرن */
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* سایه کمی ملایم‌تر */
+            margin-bottom: 12px;
+            line-height: 1.5;
+            word-wrap: break-word; /* اطمینان از شکستن کلمات طولانی */
         }
+        /* پیام کاربر */
         .user-message {
-            background-color: #3b82f6; /* آبی روشن برای کاربر */
+            background-color: #4f46e5; /* رنگ آبی/بنفش قوی‌تر (Indigo-600) */
             color: white;
             margin-right: 0;
             margin-left: auto;
             text-align: right;
+            border-bottom-left-radius: 0.5rem; /* تیزتر کردن یک گوشه برای تمایز */
         }
+        /* پیام ربات */
         .bot-message {
-            background-color: #ffffff; /* سفید برای ربات */
-            color: #1f2937;
+            background-color: #ffffff;
+            color: #1f2937; /* خاکستری تیره */
             margin-right: auto;
             margin-left: 0;
             text-align: right;
+            border-bottom-right-radius: 0.5rem; /* تیزتر کردن یک گوشه برای تمایز */
         }
-        /* نوار اسکرول سفارشی برای زیبایی بیشتر */
+        /* استایل اسکرول بار سفارشی */
         #chat-container::-webkit-scrollbar {
             width: 8px;
         }
         #chat-container::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
+            background-color: #a7b7c9; /* رنگ خاکستری ملایم */
             border-radius: 10px;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
-    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl flex flex-col h-[85vh] overflow-hidden">
-        
-        <!-- سربرگ چت‌بات -->
-        <header class="p-4 bg-indigo-600 text-white shadow-md rounded-t-3xl">
-            <h1 class="text-xl font-bold text-center">چت‌بات دانشجویی</h1>
-            <p class="text-sm text-center opacity-80">برای شروع سوال خود را بپرسید (تست API)</p>
-        </header>
 
-        <!-- کانتینر پیام‌ها -->
-        <div id="chat-container" class="flex-grow p-4 overflow-y-auto space-y-4">
-            <!-- پیام خوش‌آمدگویی اولیه -->
-            <div class="flex">
-                <div class="bot-message message-bubble">
-                    سلام! من چت‌بات دانشجویی شما هستم. لطفاً سؤال خود را بپرسید.
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl flex flex-col h-[90vh] sm:h-[80vh] overflow-hidden ring-1 ring-gray-100">
+        
+        <header class="p-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white shadow-lg flex items-center gap-4 border-b-4 border-indigo-400">
+            <div class="flex-none">
+                <div class="h-12 w-12 rounded-full bg-white/30 flex items-center justify-center ring-2 ring-white/60">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2A7 7 0 0 0 5 9v3H4a1 1 0 0 0 0 2h1v1a7 7 0 0 0 14 0v-1h1a1 1 0 0 0 0-2h-1V9a7 7 0 0 0-7-7zM7 9a5 5 0 0 1 10 0v3H7V9zm5 10c-2.206 0-4-1.794-4-4h8c0 2.206-1.794 4-4 4z"/>
+                    </svg>
                 </div>
             </div>
-            <!-- پیام‌های چت اینجا اضافه می‌شوند -->
-        </div>
 
-        <!-- کادر ورودی و دکمه ارسال -->
-        <footer class="p-4 border-t bg-gray-50">
-            <div id="message-box" class="hidden text-center p-2 text-sm font-medium bg-yellow-100 text-yellow-800 rounded-lg mb-2">
-                در حال ارسال پیام...
+            <div class="flex-1">
+                <h1 class="text-xl font-bold leading-snug">🧠 چت‌بات هوش مصنوعی دانشجویی</h1>
+                <p class="text-sm opacity-80 mt-1">
+                    نسخه آزمایشی توسط <span class="font-semibold">محمدحسین تاجیک</span> | وضعیت: آنلاین
+                </p>
             </div>
-            <div class="flex items-center space-x-2 space-x-reverse">
-                <input type="text" id="user-input" placeholder="سوال خود را اینجا بنویسید..."
-                       class="flex-grow p-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
-                       onkeydown="if(event.key === 'Enter') sendMessage()">
+
+            <div class="flex-none">
+                <button onclick="showInfoAlert()" title="درباره سازنده و پروژه" class="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div id="chat-container" class="flex-grow p-4 overflow-y-auto space-y-3 bg-white/50">
+            <div class="flex">
+                <div class="bot-message message-bubble">
+                    <strong>👋 سلام!</strong> من چت‌بات هوش مصنوعی دانشجویی هستم. طراحی شده‌ام تا به سوالات درسی، برنامه‌نویسی و پروژه‌ای شما پاسخ دهم.<br><br>
+                    <strong>چطور می‌توانم امروز کمکتان کنم؟</strong>
+                </div>
+            </div>
+
+            </div>
+
+        <footer class="p-4 border-t border-gray-200 bg-white">
+            <div id="message-box" class="hidden text-center p-2 text-sm font-medium bg-indigo-50 text-indigo-700 rounded-xl mb-3 ring-1 ring-indigo-200">
+                در حال پردازش درخواست شما...
+            </div>
+            
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <input type="text" id="user-input" placeholder="سوال خود را اینجا بنویسید (Enter)"
+                        class="flex-grow p-4 text-gray-700 border-2 border-gray-200 rounded-3xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition duration-200 shadow-inner"
+                        onkeydown="if(event.key === 'Enter') sendMessage()">
+                
                 <button onclick="sendMessage()" id="send-button"
-                        class="p-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition duration-150 ease-in-out shadow-md disabled:opacity-50"
+                        class="flex-none p-4 bg-indigo-600 text-white rounded-3xl hover:bg-indigo-700 transition duration-200 ease-in-out shadow-lg hover:shadow-xl disabled:opacity-40 disabled:hover:bg-indigo-600"
                         title="ارسال پیام (Enter)">
-                    <!-- آیکون ارسال (SVG) -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform -rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                     </svg>
                 </button>
             </div>
@@ -86,67 +111,64 @@
 
     </div>
 
-    <!-- اسکریپت جاوااسکریپت برای مدیریت چت و تماس با API -->
     <script>
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const messageBox = document.getElementById('message-box');
-        
-        const API_URL = '/reply'; // چون فرانت‌اند و بک‌اند روی یک دامنه هستند
 
-        /**
-         * تابع کمکی برای نمایش یک پیام در کانتینر چت
-         * @param {string} text - متن پیام
-         * @param {string} sender - 'user' یا 'bot'
-         */
+        // فرض کنید API شما در این مسیر پاسخ می‌دهد
+        // اگر از فریم‌ورکی مثل Flask یا Django استفاده می‌کنید، این مسیر درست است:
+        const API_URL = '/reply'; 
+
+        // تابع نمایش اطلاعات سازنده
+        function showInfoAlert() {
+            alert('🧑‍💻 این چت‌بات توسط محمدحسین تاجیک (mohmels) برای پروژه دانشجویی توسعه داده شده است.\n\nهدف: آموزش، نمونه‌سازی و استفاده از APIهای رایگان هوش مصنوعی.\nبرای اطلاعات بیشتر به مخزن گیت‌هاب پروژه مراجعه کنید.');
+        }
+
+        // تابع ایجاد و نمایش یک پیام جدید در رابط کاربری
         function displayMessage(text, sender) {
             const messageWrapper = document.createElement('div');
-            messageWrapper.classList.add('flex'); // کلاس اصلی فلکس
+            messageWrapper.classList.add('flex', 'p-1'); // پدینگ برای فواصل بهتر
 
             const messageBubble = document.createElement('div');
             messageBubble.classList.add('message-bubble', sender === 'user' ? 'user-message' : 'bot-message');
-            
-            // جایگزینی کاراکترهای newline در پاسخ‌های API با <br>
+
+            // تبدیل خطوط جدید \n به <br> برای نمایش درست در HTML
             const formattedText = text.replace(/\n/g, '<br>');
             messageBubble.innerHTML = formattedText;
 
             messageWrapper.appendChild(messageBubble);
             chatContainer.appendChild(messageWrapper);
-            
-            // اسکرول به پایین برای نمایش آخرین پیام
+
+            // اسکرول کردن به پایین برای دیدن آخرین پیام
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
-        
-        /**
-         * تابع اصلی ارسال پیام به بک‌اند
-         */
+
+        // تابع اصلی ارسال پیام به API بک‌اند
         async function sendMessage() {
             const message = userInput.value.trim();
 
             if (message === '') {
-                return; // اگر پیام خالی بود، کاری انجام نده
+                return;
             }
 
             // 1. نمایش پیام کاربر
             displayMessage(message, 'user');
-            userInput.value = ''; // پاک کردن کادر ورودی
-            
-            // 2. غیرفعال کردن ورودی و نمایش لودینگ
+            userInput.value = '';
+
+            // 2. غیرفعال کردن ورودی و نمایش پیام وضعیت
             userInput.disabled = true;
             sendButton.disabled = true;
-            messageBox.textContent = 'در حال ارسال پیام...';
+            messageBox.textContent = 'در حال پردازش درخواست شما...';
             messageBox.classList.remove('hidden');
 
             try {
-                // 3. ارسال درخواست به API
+                // 3. ارسال درخواست به بک‌اند (API)
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // این هدر برای Cross-Origin Resource Sharing (CORS) هنگام تست لازم است
-                    },
-                    body: JSON.stringify({ user_message: message }) // نام فیلد باید با آنچه در بک‌اند (main.py) انتظار دارید، مطابقت داشته باشد
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_message: message })
                 });
 
                 if (!response.ok) {
@@ -154,28 +176,28 @@
                 }
 
                 const data = await response.json();
-                
-                // 4. نمایش پاسخ API
+                // فرض می‌کنیم پاسخ API در فیلد 'response' است
                 const botResponse = data.response || "متأسفانه نتوانستم پاسخی پیدا کنم. لطفاً دوباره تلاش کنید.";
+                
+                // 4. نمایش پاسخ ربات
                 displayMessage(botResponse, 'bot');
 
             } catch (error) {
                 console.error("خطا در برقراری ارتباط با API:", error);
-                displayMessage(`متأسفانه خطایی در اتصال به بک‌اند رخ داد. (مطمئن شوید که بک‌اند در ${API_URL} اجرا شده است.)`, 'bot');
+                displayMessage(`⚠️ متأسفانه خطایی در اتصال به بک‌اند رخ داد. (کنسول را چک کنید)`, 'bot');
             } finally {
-                // 5. فعال‌سازی مجدد ورودی و پنهان کردن لودینگ
+                // 5. فعال‌سازی مجدد
                 userInput.disabled = false;
                 sendButton.disabled = false;
                 messageBox.classList.add('hidden');
-                userInput.focus(); // فوکوس بر روی کادر ورودی
+                userInput.focus(); // فوکوس روی کادر ورودی
             }
         }
-        
-        // پیام‌های چت را به طور پیش‌فرض به پایین اسکرول کنید
-        window.onload = () => {
-             chatContainer.scrollTop = chatContainer.scrollHeight;
-        };
 
+        // فوکوس روی کادر ورودی هنگام بارگذاری صفحه
+        window.onload = () => {
+            userInput.focus();
+        };
     </script>
 </body>
 </html>
