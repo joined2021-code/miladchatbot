@@ -1,0 +1,7 @@
+﻿venv/
+backend/venv/
+frontend/venv/
+.env
+__pycache__/
+*.pyc
+requirements.txtpip

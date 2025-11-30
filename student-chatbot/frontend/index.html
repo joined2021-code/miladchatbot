@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چت‌بات دانشجویی (رابط کاربری ساده)</title>
+    <!-- بارگذاری Tailwind CSS برای استایل‌دهی سریع و مدرن -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* تنظیم فونت برای نمایش بهتر زبان فارسی */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        /* استایل خاص برای حباب‌های پیام */
+        .message-bubble {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 1.5rem; /* گوشه‌های گردتر */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+        .user-message {
+            background-color: #3b82f6; /* آبی روشن برای کاربر */
+            color: white;
+            margin-right: 0;
+            margin-left: auto;
+            text-align: right;
+        }
+        .bot-message {
+            background-color: #ffffff; /* سفید برای ربات */
+            color: #1f2937;
+            margin-right: auto;
+            margin-left: 0;
+            text-align: right;
+        }
+        /* نوار اسکرول سفارشی برای زیبایی بیشتر */
+        #chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl flex flex-col h-[85vh] overflow-hidden">
+        
+        <!-- سربرگ چت‌بات -->
+        <header class="p-4 bg-indigo-600 text-white shadow-md rounded-t-3xl">
+            <h1 class="text-xl font-bold text-center">چت‌بات دانشجویی</h1>
+            <p class="text-sm text-center opacity-80">برای شروع سوال خود را بپرسید (تست API)</p>
+        </header>
+
+        <!-- کانتینر پیام‌ها -->
+        <div id="chat-container" class="flex-grow p-4 overflow-y-auto space-y-4">
+            <!-- پیام خوش‌آمدگویی اولیه -->
+            <div class="flex">
+                <div class="bot-message message-bubble">
+                    سلام! من چت‌بات دانشجویی شما هستم. لطفاً سؤال خود را بپرسید.
+                </div>
+            </div>
+            <!-- پیام‌های چت اینجا اضافه می‌شوند -->
+        </div>
+
+        <!-- کادر ورودی و دکمه ارسال -->
+        <footer class="p-4 border-t bg-gray-50">
+            <div id="message-box" class="hidden text-center p-2 text-sm font-medium bg-yellow-100 text-yellow-800 rounded-lg mb-2">
+                در حال ارسال پیام...
+            </div>
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <input type="text" id="user-input" placeholder="سوال خود را اینجا بنویسید..."
+                       class="flex-grow p-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
+                       onkeydown="if(event.key === 'Enter') sendMessage()">
+                <button onclick="sendMessage()" id="send-button"
+                        class="p-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition duration-150 ease-in-out shadow-md disabled:opacity-50"
+                        title="ارسال پیام (Enter)">
+                    <!-- آیکون ارسال (SVG) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- اسکریپت جاوااسکریپت برای مدیریت چت و تماس با API -->
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const messageBox = document.getElementById('message-box');
+        
+        const API_URL = '/reply'; // چون فرانت‌اند و بک‌اند روی یک دامنه هستند
+
+        /**
+         * تابع کمکی برای نمایش یک پیام در کانتینر چت
+         * @param {string} text - متن پیام
+         * @param {string} sender - 'user' یا 'bot'
+         */
+        function displayMessage(text, sender) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('flex'); // کلاس اصلی فلکس
+
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble', sender === 'user' ? 'user-message' : 'bot-message');
+            
+            // جایگزینی کاراکترهای newline در پاسخ‌های API با <br>
+            const formattedText = text.replace(/\n/g, '<br>');
+            messageBubble.innerHTML = formattedText;
+
+            messageWrapper.appendChild(messageBubble);
+            chatContainer.appendChild(messageWrapper);
+            
+            // اسکرول به پایین برای نمایش آخرین پیام
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        /**
+         * تابع اصلی ارسال پیام به بک‌اند
+         */
+        async function sendMessage() {
+            const message = userInput.value.trim();
+
+            if (message === '') {
+                return; // اگر پیام خالی بود، کاری انجام نده
+            }
+
+            // 1. نمایش پیام کاربر
+            displayMessage(message, 'user');
+            userInput.value = ''; // پاک کردن کادر ورودی
+            
+            // 2. غیرفعال کردن ورودی و نمایش لودینگ
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            messageBox.textContent = 'در حال ارسال پیام...';
+            messageBox.classList.remove('hidden');
+
+            try {
+                // 3. ارسال درخواست به API
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // این هدر برای Cross-Origin Resource Sharing (CORS) هنگام تست لازم است
+                    },
+                    body: JSON.stringify({ user_message: message }) // نام فیلد باید با آنچه در بک‌اند (main.py) انتظار دارید، مطابقت داشته باشد
+                });
+
+                if (!response.ok) {
+                    throw new Error(`خطای HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // 4. نمایش پاسخ API
+                const botResponse = data.response || "متأسفانه نتوانستم پاسخی پیدا کنم. لطفاً دوباره تلاش کنید.";
+                displayMessage(botResponse, 'bot');
+
+            } catch (error) {
+                console.error("خطا در برقراری ارتباط با API:", error);
+                displayMessage(`متأسفانه خطایی در اتصال به بک‌اند رخ داد. (مطمئن شوید که بک‌اند در ${API_URL} اجرا شده است.)`, 'bot');
+            } finally {
+                // 5. فعال‌سازی مجدد ورودی و پنهان کردن لودینگ
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                messageBox.classList.add('hidden');
+                userInput.focus(); // فوکوس بر روی کادر ورودی
+            }
+        }
+        
+        // پیام‌های چت را به طور پیش‌فرض به پایین اسکرول کنید
+        window.onload = () => {
+             chatContainer.scrollTop = chatContainer.scrollHeight;
+        };
+
+    </script>
+</body>
+</html>
