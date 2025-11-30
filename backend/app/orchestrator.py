@@ -9,9 +9,11 @@ load_dotenv()  # بارگذاری متغیرهای محیطی از فایل .env
 # بررسی کلید API به صورت سراسری
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 model = None # تعریف اولیه مدل
+SETUP_ERROR = None # متغیر جدید برای نگهداری پیام خطای تنظیمات
 
 if not GEMINI_API_KEY:
     print("⚠️ خطا: متغیر محیطی GEMINI_API_KEY تنظیم نشده است!")
+    SETUP_ERROR = "کلید API (GEMINI_API_KEY) در فایل‌های محیطی (مثل .env) یافت نشد."
 else:
     try:
         # تنظیم کلاینت Gemini
@@ -24,6 +26,8 @@ else:
         )
     except Exception as e:
         print(f"⚠️ خطا در تنظیم Gemini API: {str(e)}")
+        # در صورت شکست، پیام خطای دقیق را ذخیره می‌کنیم
+        SETUP_ERROR = f"خطا در تنظیمات اولیه مدل (API Key نامعتبر یا سرویس): {str(e)}"
         # در صورت شکست، مدل همچنان None خواهد بود
 
 def get_reply_user(user_text: str) -> str:
@@ -32,7 +36,9 @@ def get_reply_user(user_text: str) -> str:
     """
     # بررسی مدل قبل از استفاده (برای مدیریت خطای API Key)
     if model is None:
-        return "⚠️ خطای تنظیمات بک‌اند: کلید API (GEMINI_API_KEY) احتمالاً تنظیم نشده یا نامعتبر است. لطفاً فایل‌های پیکربندی را بررسی کنید."
+        # استفاده از SETUP_ERROR برای نمایش دلیل دقیق شکست
+        detailed_error = SETUP_ERROR if SETUP_ERROR else "خطای نامشخص در تنظیمات."
+        return f"⚠️ خطای تنظیمات بک‌اند: {detailed_error} لطفاً فایل‌های پیکربندی و کلید API را بررسی کنید."
 
     try:
         # استفاده از ابزار جستجوی گوگل برای پاسخ‌های به‌روز (با tools=[{"google_search": {}}])
