@@ -5,48 +5,49 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from .orchestrator import get_reply_user # این تابع برای پاسخگویی اصلی چت است
+from .orchestrator import get_reply_user
 import base64
 import io
 import struct
 
 # --- وارد کردن ابزارهای Gemini API ---
 import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
+# نیازی به وارد کردن این موارد نیست مگر برای تنظیمات پیشرفته
+# from google.generativeai.types import HarmCategory, HarmBlockThreshold 
 
 load_dotenv()
 
-# تعریف مدل داده برای درخواست‌های POST
+# تعریف مدل داده برای درخواست‌ها
 class UserMessage(BaseModel):
     user_message: str
 
-# تعریف مدل داده برای درخواست‌های TTS
 class TTSRequest(BaseModel):
     text: str
-    voice: str = "Kore" # صدای پیش‌فرض مناسب فارسی
+    voice: str = "Kore" # صدای پیش‌فرض
 
-# تعریف مدل داده برای درخواست خلاصه‌سازی
 class SummarizeRequest(BaseModel):
     text_to_summarize: str
 
 # --- متغیرهای جهانی و تنظیمات API ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-tts_model = None
-chat_model = None # برای استفاده در خلاصه‌سازی
+tts_model_client = None
+chat_model_client = None
 SETUP_ERROR = None
 
 if GEMINI_API_KEY:
     try:
         # تنظیم کلاینت Gemini
         genai.configure(api_key=GEMINI_API_KEY)
-        # مدل TTS و چت (برای خلاصه‌سازی) را مستقیماً تعریف می‌کنیم
-        tts_model = genai.GenerativeModel('gemini-2.5-flash-preview-tts')
-        chat_model = genai.GenerativeModel('gemini-2.5-flash')
+        # مدل‌ها را به عنوان کلاینت‌های عمومی تعریف می‌کنیم
+        tts_model_client = genai.GenerativeModel('gemini-2.5-flash-preview-tts')
+        chat_model_client = genai.GenerativeModel('gemini-2.5-flash')
+        print("✅ Gemini API clients initialized successfully.")
     except Exception as e:
         print(f"⚠️ خطا در تنظیم Gemini API: {str(e)}")
         SETUP_ERROR = f"خطا در تنظیمات اولیه مدل: {str(e)}"
 else:
     SETUP_ERROR = "کلید API (GEMINI_API_KEY) در فایل‌های محیطی (مثل .env) یافت نشد."
+    print(f"⚠️ {SETUP_ERROR}")
 
 # ----------------------------------------------------------------------
 # توابع کمکی تبدیل PCM به WAV
@@ -100,7 +101,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ۱. سرویس‌دهی روت اصلی (/) برای نمایش index.html
+# ۱. سرویس‌دهی روت اصلی (/)
 app.mount("/static_files", StaticFiles(directory="frontend"), name="frontend_static")
 
 @app.get("/", response_class=HTMLResponse)
@@ -123,8 +124,9 @@ def reply(data: UserMessage):
 # ۳. روت API جدید برای TTS (تبدیل متن به گفتار)
 @app.post("/tts")
 async def generate_tts(data: TTSRequest):
-    if tts_model is None or SETUP_ERROR:
-        # اگر تنظیمات شکست خورده است، خطا برمی‌گردانیم
+    global tts_model_client, SETUP_ERROR
+
+    if tts_model_client is None or SETUP_ERROR:
         raise HTTPException(status_code=500, detail=f"TTS model setup failed: {SETUP_ERROR}")
 
     # محدودیت TTS: 300 کاراکتر
@@ -147,23 +149,26 @@ async def generate_tts(data: TTSRequest):
     }
 
     try:
-        response = tts_model.generate_content(**tts_payload, tools=[])
+        # ارسال مستقیم محموله به API
+        response = tts_model_client.generate_content(**tts_payload, tools=[])
         
-        # --- اعمال بررسی‌های ساختاری قوی‌تر ---
-        if not (response.candidates and 
-                response.candidates[0].content and 
-                response.candidates[0].content.parts and 
-                response.candidates[0].content.parts[0].inlineData):
+        # --- اعمال بررسی‌های ساختاری قوی و دقیق ---
+        audio_part = None
+        if (response.candidates and 
+            response.candidates[0].content and 
+            response.candidates[0].content.parts):
             
-            # اگر ساختار مورد انتظار برای داده صوتی وجود ندارد (مثلاً محتوا ایمنی را نقض کرده است)
+            # جستجو برای بخشی که شامل inlineData است
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, 'inlineData') and part.inlineData:
+                    audio_part = part.inlineData
+                    break
+
+        if not audio_part:
             print("TTS structure error: Inline audio data is missing in the response.")
-            # یک خطای توصیفی‌تر برای کاربر ارسال می‌کنیم.
             raise HTTPException(status_code=500, 
-                                detail="TTS model returned an invalid structure. It might be due to safety violation or an empty response.")
+                                detail="TTS model returned an empty or invalid audio structure. Check model safety settings.")
 
-
-        audio_part = response.candidates[0].content.parts[0].inlineData
-        
         if audio_part.mimeType != "audio/L16;rate=24000":
             # این بررسی مهم است
             raise HTTPException(status_code=500, detail=f"Invalid audio mimeType: {audio_part.mimeType}")
@@ -180,14 +185,18 @@ async def generate_tts(data: TTSRequest):
 
     except Exception as e:
         print(f"Error during TTS generation: {e}")
-        # اطمینان از اینکه پیام خطا در کنسول مفید است
+        # برای اشکال‌زدایی بهتر در کنسول
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"TTS processing failed due to an unexpected error: {str(e)}")
 
 
 # ۴. روت API جدید برای خلاصه‌سازی متن
 @app.post("/summarize")
 async def summarize_text(data: SummarizeRequest):
-    if chat_model is None or SETUP_ERROR:
+    global chat_model_client, SETUP_ERROR
+    
+    if chat_model_client is None or SETUP_ERROR:
         raise HTTPException(status_code=500, detail=f"Summarization model setup failed: {SETUP_ERROR}")
 
     text_to_summarize = data.text_to_summarize
@@ -199,8 +208,9 @@ async def summarize_text(data: SummarizeRequest):
     )
 
     try:
-        response = chat_model.generate_content(summary_prompt, tools=[])
+        response = chat_model_client.generate_content(summary_prompt, tools=[])
         
+        # بررسی پاسخ‌های مسدود شده توسط سیستم ایمنی
         if response.candidates and response.candidates[0].finish_reason.name == 'SAFETY':
              return JSONResponse(
                  content={"summary": "⚠️ به دلیل خط‌مشی‌های ایمنی، امکان خلاصه‌سازی این متن وجود ندارد."},
