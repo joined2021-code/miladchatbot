@@ -120,37 +120,26 @@ async def generate_tts(data: TTSRequest):
             }],
             generation_config={
                 "response_modalities": ["AUDIO"],
-                "speech_config": {
-                    "voice_config": {
-                        "prebuilt_voice_config": {
-                            "voice_name": data.voice
-                        }
-                    }
+                "audio_config": {
+                    "voice_name": data.voice,
+                    "audio_format": "wav"
                 }
-            },
-            tools=[]
+            }
         )
 
-        # استخراج داده صوتی
         audio_part = None
-        if (response.candidates and 
-            response.candidates[0].content and
-            response.candidates[0].content.parts):
-
-            for p in response.candidates[0].content.parts:
-                if hasattr(p, 'inline_data') and p.inline_data:
-                    audio_part = p.inline_data
-                    break
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, "inline_data") and part.inline_data:
+                audio_part = part.inline_data
+                break
 
         if not audio_part:
-            raise RuntimeError("ساختار پاسخ صوتی معتبر نیست.")
+            raise RuntimeError("Could not extract inline audio data")
 
-        # پذیرش هر دو MIME جدید و قدیم
-        if audio_part.mime_type not in ["audio/L16;rate=24000", "audio/L16;codec=pcm;rate=24000"]:
-            raise RuntimeError(f"MIME اشتباه: {audio_part.mime_type}")
+        if audio_part.mime_type != "audio/wav":
+            raise RuntimeError(f"Unexpected MIME type: {audio_part.mime_type}")
 
-        pcm_bytes = base64.b64decode(audio_part.data)
-        wav_bytes = pcm_to_wav(pcm_bytes, 24000)
+        wav_bytes = base64.b64decode(audio_part.data)
 
         return {"audio_data": base64.b64encode(wav_bytes).decode("utf-8")}
 
