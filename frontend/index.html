@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💬 چت‌بات دانشجویی</title>
+    <title>💬 چت‌بات دانشجویی — رابط کاربری شیک</title>
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- فونت گوگل (اختیاری: برای ظاهری مدرن‌تر) -->
@@ -20,9 +20,9 @@
             padding: 12px 18px;
             border-radius: 1.5rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-bottom: 4px; /* فضای کمتر برای چسبیدن به دکمه TTS در ساختار جدید */
             line-height: 1.5;
             word-wrap: break-word;
+            margin-bottom: 4px; 
         }
         /* پیام کاربر */
         .user-message {
@@ -41,45 +41,50 @@
             margin-left: 0;
             text-align: right;
             border-bottom-right-radius: 0.5rem;
-            /* حذف padding-left که باعث به‌هم‌ریختگی می‌شد */
-            padding-left: 18px;
-            position: static;
         }
-        
-        /* === استایل‌های جدید برای کانتینر پیام ربات === */
+        /* کانتینر پیام ربات برای مدیریت دکمه‌های TTS و Summarize */
         .bot-message-wrapper {
-            display: flex; /* برای قرارگیری TTS و حباب پیام کنار هم */
-            flex-direction: column; /* چیدن TTS و حباب به صورت عمودی */
-            align-items: flex-start; /* ترازبندی در سمت راست (برای RTL) */
-            margin-right: auto;
-            margin-left: 0;
-            max-width: 85%; /* محدودیت عرض برای کانتینر کلی */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
-
-        /* استایل دکمه TTS (دیگر absolute نیست) */
-        .tts-button {
-            /* در ساختار جدید، دکمه بالاتر از حباب قرار می‌گیرد */
-            background-color: #e0e7ff; /* Indigo-100 */
-            color: #4f46e5;
-            padding: 6px;
-            border-radius: 50%;
+        /* کانتینر دکمه‌ها */
+        .action-buttons {
+            display: flex;
+            gap: 8px; /* فاصله بین دکمه‌ها */
+            margin-top: 4px;
+            margin-bottom: 8px;
+        }
+        /* استایل دکمه‌ها */
+        .action-button {
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            line-height: 1.25rem;
+            color: #4f46e5; 
+            background-color: #eef2ff;
+            border-radius: 0.75rem;
+            border: 1px solid #c7d2fe;
             transition: all 0.2s;
             cursor: pointer;
-            width: 32px; /* عرض ثابت */
-            height: 32px; /* ارتفاع ثابت */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 4px; /* فاصله از حباب پیام */
+            white-space: nowrap; /* از شکستن متن دکمه جلوگیری می‌کند */
         }
-        .tts-button:hover:not(.playing) {
-            background-color: #c7d2fe; /* Indigo-200 */
+        .action-button:hover:not(:disabled) {
+            background-color: #e0e7ff;
         }
-        .tts-button.playing {
-            background-color: #ef4444; /* Red-500 */
+        .action-button.loading {
+            cursor: not-allowed;
+            opacity: 0.6;
+            background-color: #ddd;
+        }
+        .action-button.playing {
+            background-color: #4f46e5;
             color: white;
         }
-
+        .action-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
         /* استایل اسکرول بار سفارشی */
         #chat-container::-webkit-scrollbar {
             width: 8px;
@@ -97,21 +102,18 @@
         
         <!-- === هدر و نوار بالایی === -->
         <header class="p-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white shadow-lg flex items-center gap-4 border-b-4 border-indigo-400">
-            <!-- آواتار ربات -->
             <div class="flex-none">
                 <div class="h-12 w-12 rounded-full bg-white/30 flex items-center justify-center ring-2 ring-white/60">
-                    <!-- آیکون ربات (به جای چت) -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2A7 7 0 0 0 5 9v3H4a1 1 0 0 0 0 2h1v1a7 7 0 0 0 14 0v-1h1a1 1 0 0 0 0-2h-1V9a7 7 0 0 0-7-7zM7 9a5 5 0 0 1 10 0v3H7V9zm5 10c-2.206 0-4-1.794-4-4h8c0 2.206-1.794 4-4 4z"/>
                     </svg>
                 </div>
             </div>
 
-            <!-- اطلاعات اصلی -->
             <div class="flex-1">
                 <h1 class="text-xl font-bold leading-snug">🧠 چت‌بات هوش مصنوعی دانشجویی</h1>
                 <p class="text-sm opacity-80 mt-1">
-                    ساخته شده توسط <span class="font-semibold">محمدحسین تاجیک</span> | وضعیت: آنلاین
+                    نسخه آزمایشی توسط <span class="font-semibold">محمدحسین تاجیک</span> | وضعیت: آنلاین
                 </p>
             </div>
 
@@ -124,30 +126,14 @@
                 </button>
             </div>
         </header>
-        
-        <!-- دکمه‌های ابزار LLM -->
-        <div class="p-3 bg-indigo-50 border-b border-indigo-200 flex justify-start gap-3">
-            <button id="summarize-btn" disabled
-                class="px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-md">
-                ✨ خلاصه‌سازی آخرین پیام
-            </button>
-        </div>
-
 
         <!-- کانتینر پیام‌ها (اسکرول شونده) -->
         <div id="chat-container" class="flex-grow p-4 overflow-y-auto space-y-3 bg-white/50">
-            <!-- پیام خوش‌آمدگویی اولیه (با ساختار جدید برای TTS) -->
+            <!-- پیام خوش‌آمدگویی اولیه (با استایل جدید) -->
             <div class="flex">
-                <div class="bot-message-wrapper">
-                    <button class="tts-button" onclick="speakMessage(this)" title="خواندن پیام (TTS)">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
-                        </svg>
-                    </button>
-                    <div class="bot-message message-bubble">
-                        <strong>👋 سلام!</strong> من چت‌بات هوش مصنوعی دانشجویی هستم. طراحی شده‌ام تا به سوالات درسی، برنامه‌نویسی و پروژه‌ای شما پاسخ دهم.<br><br>
-                        <strong>چطور می‌توانم امروز کمکتان کنم؟</strong>
-                    </div>
+                <div class="bot-message message-bubble">
+                    <strong>👋 سلام!</strong> من چت‌بات هوش مصنوعی دانشجویی هستم. طراحی شده‌ام تا به سوالات درسی، برنامه‌نویسی و پروژه‌ای شما پاسخ دهم.<br><br>
+                    <strong>چطور می‌توانم امروز کمکتان کنم؟</strong>
                 </div>
             </div>
 
@@ -181,255 +167,218 @@
 
     <!-- === اسکریپت جاوااسکریپت === -->
     <script>
-        // متغیرهای ثابت و API Key
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const messageBox = document.getElementById('message-box');
-        const summarizeBtn = document.getElementById('summarize-btn');
-        
-        // --- رفع خطای API: تعریف آدرس بک‌اند اصلی ---
-        // ✅ آدرس اصلاح شده برای تطابق با روت /reply در main.py
-        const API_URL = "/reply"; 
 
-        // توجه: این API_KEY باید در محیط اجرای نهایی توسط Canvas تامین شود.
-        const API_KEY = ""; 
-        const TEXT_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
-        const TTS_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
-        
-        let currentAudio = null; // برای ردیابی صدای در حال پخش
+        const API_URL = '/reply';
+        const TTS_URL = '/tts';
+        const SUMMARIZE_URL = '/summarize';
 
-        // تابع کمکی برای تبدیل Base64 به ArrayBuffer
-        function base64ToArrayBuffer(base64) {
-            const binaryString = window.atob(base64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            return bytes.buffer;
-        }
+        let audioPlayer = new Audio();
+        let lastBotMessageText = ''; // برای نگهداری متن آخرین پیام ربات جهت خلاصه‌سازی
 
-        // تابع کمکی برای تبدیل PCM به WAV
-        function pcmToWav(pcm16, sampleRate) {
-            const numChannels = 1;
-            const bytesPerSample = 2;
-            const buffer = new ArrayBuffer(44 + pcm16.length * bytesPerSample);
-            const view = new DataView(buffer);
+        // ----------------------------------------------------------------------
+        // تابع TTS: فراخوانی API و پخش صدا
+        // ----------------------------------------------------------------------
+        async function playTts(event) {
+            const button = event.currentTarget;
+            const messageBubble = button.closest('.bot-message-wrapper').querySelector('.bot-message');
+            // استخراج متن، حذف تگ‌های HTML و محدود کردن به 300 کاراکتر
+            const textToSpeak = messageBubble.textContent.trim().substring(0, 300);
 
-            // RIFF identifier
-            writeString(view, 0, 'RIFF');
-            // file length (excluding RIFF identifier and file length)
-            view.setUint32(4, 36 + pcm16.length * bytesPerSample, true);
-            // 'WAVE' identifier
-            writeString(view, 8, 'WAVE');
-            // 'fmt ' chunk identifier
-            view.setUint32(12, 0x20746d66, false); // 'fmt '
-            // fmt chunk length (16 for PCM)
-            view.setUint32(16, 16, true);
-            // sample format (1 for PCM)
-            view.setUint16(20, 1, true);
-            // number of channels
-            view.setUint16(22, numChannels, true);
-            // sample rate
-            view.setUint32(24, sampleRate, true);
-            // byte rate
-            view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
-            // block align
-            view.setUint16(32, numChannels * bytesPerSample, true);
-            // bits per sample
-            view.setUint16(34, 16, true);
-            // 'data' chunk identifier
-            writeString(view, 36, 'data');
-            // data chunk length
-            view.setUint32(40, pcm16.length * bytesPerSample, true);
-
-            // Write PCM data
-            let offset = 44;
-            for (let i = 0; i < pcm16.length; i++) {
-                view.setInt16(offset, pcm16[i], true);
-                offset += 2;
-            }
-
-            return new Blob([buffer], { type: 'audio/wav' });
-
-            function writeString(view, offset, str) {
-                for (let i = 0; i < str.length; i++) {
-                    view.setUint8(offset + i, str.charCodeAt(i));
-                }
-            }
-        }
-
-
-        // تابع کمکی برای هندل کردن Exponential Backoff در فراخوانی API
-        async function fetchWithRetry(url, options, maxRetries = 5) {
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.status !== 429 && response.status < 500) {
-                        return response;
-                    }
-                } catch (error) {
-                    // در صورت خطای شبکه، ادامه به سمت Backoff
-                }
-
-                // Exponential Backoff
-                const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-            throw new Error("API call failed after multiple retries.");
-        }
-
-
-        // تابع برای تولید صدا (TTS)
-        async function speakMessage(button) {
-            // توقف هر صدای در حال پخش
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-                document.querySelectorAll('.tts-button').forEach(btn => btn.classList.remove('playing'));
-                if (currentAudio.button === button) {
-                    currentAudio = null;
-                    return; // اگر دوباره روی دکمه در حال پخش کلیک شد، متوقف کن و خارج شو
-                }
-            }
-
-            button.classList.add('playing');
-            button.disabled = true;
-
-            // پیدا کردن حباب پیام (div با کلاس bot-message) که متن در آن قرار دارد
-            const messageWrapper = button.parentElement; // bot-message-wrapper
-            const messageElement = messageWrapper.querySelector('.bot-message');
-
-            // پاک کردن <br> و تبدیل به متن ساده
-            const textToSpeak = messageElement.innerText.replace(/[\n]/g, ' ').trim(); 
-
-            // Payload برای TTS
-            const payload = {
-                contents: [{
-                    parts: [{ text: `Say in a clear Persian accent: ${textToSpeak}` }] // تاکید بر فارسی بودن
-                }],
-                generationConfig: {
-                    responseModalities: ["AUDIO"],
-                    speechConfig: {
-                        voiceConfig: {
-                            prebuiltVoiceConfig: { voiceName: "Achird" } // صدای دوستانه
-                        }
-                    }
-                },
-                model: "gemini-2.5-flash-preview-tts"
-            };
-
-            try {
-                const response = await fetchWithRetry(TTS_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!response.ok) throw new Error(`TTS API failed: ${response.status}`);
-                
-                const result = await response.json();
-                const part = result?.candidates?.[0]?.content?.parts?.[0];
-                const audioData = part?.inlineData?.data;
-                const mimeType = part?.inlineData?.mimeType;
-
-                if (audioData && mimeType && mimeType.startsWith("audio/L16")) {
-                    // استخراج Sample Rate از MimeType
-                    const sampleRateMatch = mimeType.match(/rate=(\d+)/);
-                    const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 16000;
-                    
-                    const pcmData = base64ToArrayBuffer(audioData);
-                    const pcm16 = new Int16Array(pcmData);
-                    const wavBlob = pcmToWav(pcm16, sampleRate);
-                    const audioUrl = URL.createObjectURL(wavBlob);
-                    
-                    const audio = new Audio(audioUrl);
-                    currentAudio = audio;
-                    currentAudio.button = button; // ردیابی دکمه مربوطه
-
-                    audio.onended = () => {
-                        button.classList.remove('playing');
-                        button.disabled = false;
-                        currentAudio = null;
-                    };
-                    audio.play();
-
-                } else {
-                    console.error("TTS response missing audio data or unexpected mime type:", mimeType);
-                }
-
-            } catch (error) {
-                console.error("خطا در TTS:", error);
-            } finally {
-                button.disabled = false;
-            }
-        }
-
-
-        // تابع برای خلاصه‌سازی متن (LLM)
-        async function summarizeLastBotMessage() {
-            const lastBotMessage = getLastBotMessageText();
-            if (!lastBotMessage) {
+            if (textToSpeak.length === 0 || button.disabled) {
                 return;
             }
 
-            summarizeBtn.disabled = true;
-            const originalButtonText = summarizeBtn.textContent;
-            summarizeBtn.textContent = "در حال خلاصه‌سازی...";
-            
-            const systemPrompt = "You are a helpful study assistant. Summarize the following academic or technical text concisely in Persian for a university student. Keep the summary to a maximum of 3 sentences.";
-            const userQuery = lastBotMessage;
+            // اگر در حال پخش است، متوقف کن
+            if (button.classList.contains('playing')) {
+                audioPlayer.pause();
+                return;
+            }
 
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-            };
+            // نمایش وضعیت بارگذاری
+            button.classList.add('loading');
+            button.textContent = '⏳ در حال آماده‌سازی...';
+            button.disabled = true; // غیرفعال کردن موقت دکمه
 
             try {
-                const response = await fetchWithRetry(TEXT_API_URL, {
+                // درخواست Base64 فایل صوتی
+                const response = await fetch(TTS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ text: textToSpeak, voice: 'Kore' })
                 });
-                
-                if (!response.ok) throw new Error(`Summary API failed: ${response.status}`);
 
-                const result = await response.json();
-                const summaryText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (summaryText) {
-                    displayMessage(`خلاصه (✨):\n\n${summaryText}`, 'bot');
-                } else {
-                    displayMessage(`متأسفانه نتوانستم خلاصه کنم.`, 'bot');
+                if (!response.ok) {
+                    throw new Error(`خطای HTTP: ${response.status}`);
                 }
+
+                const data = await response.json();
+                const audioBase64 = data.audio_data;
+
+                // ** رفع باگ: Base64 صحیح **
+                const audioUrl = `data:audio/wav;base64,${audioBase64}`; 
+                audioPlayer.src = audioUrl;
+
+                // شروع پخش
+                await audioPlayer.play();
+                
+                // تغییر وضعیت دکمه به "در حال پخش"
+                button.classList.remove('loading');
+                button.classList.add('playing');
+                button.textContent = '⏹️ توقف';
+
+            } catch (error) {
+                console.error("خطا در تولید TTS:", error);
+                // رفع باگ: اگر خطا رخ داد، دکمه را فعال کن تا کاربر بتواند دوباره تلاش کند
+                button.classList.remove('loading', 'playing');
+                button.textContent = '❌ خطا در خواندن';
+                button.disabled = false;
+                
+                // نمایش پیام خطا در UI
+                displayMessage('⚠️ خطای سرویس TTS. لطفاً کنسول را بررسی کنید.', 'bot');
+            }
+            
+            // بازگشت دکمه به حالت عادی پس از پایان پخش/توقف
+            audioPlayer.onended = audioPlayer.onpause = () => {
+                if (!button.classList.contains('loading')) { // مطمئن می‌شویم که در حالت loading نیست
+                    button.classList.remove('playing');
+                    button.textContent = '🔊 خواندن متن';
+                    button.disabled = false;
+                }
+            };
+        }
+        
+        // ----------------------------------------------------------------------
+        // تابع خلاصه‌سازی: فراخوانی API و نمایش پیام جدید
+        // ----------------------------------------------------------------------
+        async function summarizeMessage(event) {
+            const button = event.currentTarget;
+            const messageBubble = button.closest('.bot-message-wrapper').querySelector('.bot-message');
+            const textToSummarize = messageBubble.textContent.trim();
+
+            if (textToSummarize.length < 50) {
+                 displayMessage('⚠️ برای خلاصه‌سازی، متن باید حداقل ۵۰ کاراکتر باشد.', 'bot');
+                 return;
+            }
+
+            // وضعیت بارگذاری
+            button.classList.add('loading');
+            button.textContent = '⏳ در حال خلاصه‌سازی...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch(SUMMARIZE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text_to_summarize: textToSummarize })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`خطای HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const summary = data.summary || "خلاصه‌سازی موفقیت‌آمیز نبود.";
+                
+                // نمایش خلاصه به عنوان پیام جدید ربات
+                displayMessage('**خلاصه متن:** ' + summary, 'bot');
 
             } catch (error) {
                 console.error("خطا در خلاصه‌سازی:", error);
-                displayMessage(`⚠️ خطای سرویس خلاصه‌سازی.`, 'bot');
+                // نمایش خطای سرویس
+                displayMessage('⚠️ خطای سرویس خلاصه‌سازی. لطفاً کنسول را برای جزئیات بررسی کنید.', 'bot');
             } finally {
-                summarizeBtn.textContent = originalButtonText;
-                summarizeBtn.disabled = false;
+                // بازگرداندن دکمه به حالت عادی
+                button.classList.remove('loading');
+                button.textContent = '📄 خلاصه‌سازی';
+                button.disabled = false;
             }
         }
+        
+        // ----------------------------------------------------------------------
+        // تابع رندرینگ: Markdown و لینک‌ها
+        // ----------------------------------------------------------------------
+        function renderMarkdownAndLinks(text) {
+            // 1. تبدیل خطوط جدید \n به <br>
+            let html = text.replace(/\n/g, '<br>');
 
+            // 2. ** رفع باگ: بولد کردن ** (استفاده از <strong>)
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-        // تابع کمکی برای استخراج متن آخرین پیام ربات
-        function getLastBotMessageText() {
-            const botMessages = chatContainer.querySelectorAll('.bot-message');
-            if (botMessages.length === 0) return null;
-            
-            // آخرین پیام ربات
-            const lastMessageElement = botMessages[botMessages.length - 1];
-            
-            // متن خالص حباب پیام را استخراج کنید
-            const textContent = lastMessageElement.innerHTML;
-            
-            // جایگزینی <br> با \n برای پردازش متن توسط LLM
-            return textContent.replace(/<br\s*\/?>/gi, '\n').trim();
+            // 3. ** رفع باگ: تبدیل لینک به تگ <a> ** (استفاده از یک regex برای تشخیص URLها)
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            html = html.replace(urlRegex, (url) => {
+                // اطمینان از اینکه لینک اینستاگرام با target="_blank" باز شود
+                if (url.includes('instagram.com')) {
+                    return `<a href="${url}" target="_blank" class="text-indigo-600 underline hover:text-indigo-800">${url}</a>`;
+                }
+                return `<a href="${url}" target="_blank" class="text-indigo-600 underline hover:text-indigo-800">${url}</a>`;
+            });
+
+            return html;
         }
 
-        // تابع اصلی ارسال پیام به API بک‌اند (برای چت)
+
+        // ----------------------------------------------------------------------
+        // تابع ایجاد و نمایش یک پیام جدید در رابط کاربری
+        // ----------------------------------------------------------------------
+        function displayMessage(text, sender) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('flex', 'p-1'); 
+
+            if (sender === 'user') {
+                const messageBubble = document.createElement('div');
+                messageBubble.classList.add('message-bubble', 'user-message');
+                // پیام کاربر نیازی به رندرینگ لینک و مارک‌داون ندارد
+                messageBubble.textContent = text; 
+                messageWrapper.appendChild(messageBubble);
+
+            } else { // sender === 'bot'
+                // ذخیره متن آخرین پیام ربات (متن خام) برای خلاصه‌سازی
+                lastBotMessageText = text;
+                
+                const botMessageWrapper = document.createElement('div');
+                botMessageWrapper.classList.add('bot-message-wrapper');
+                
+                // --- کانتینر دکمه‌ها ---
+                const actionButtonsContainer = document.createElement('div');
+                actionButtonsContainer.classList.add('action-buttons');
+                
+                // 1. ساخت دکمه TTS
+                const ttsButton = document.createElement('button');
+                ttsButton.classList.add('action-button');
+                ttsButton.textContent = '🔊 خواندن متن';
+                ttsButton.onclick = playTts;
+                actionButtonsContainer.appendChild(ttsButton);
+                
+                // 2. ساخت دکمه خلاصه‌سازی
+                const summarizeButton = document.createElement('button');
+                summarizeButton.classList.add('action-button');
+                summarizeButton.textContent = '📄 خلاصه‌سازی';
+                summarizeButton.onclick = summarizeMessage;
+                actionButtonsContainer.appendChild(summarizeButton);
+                
+                botMessageWrapper.appendChild(actionButtonsContainer);
+                
+                // 3. ساخت حباب پیام با رندرینگ بهبود یافته
+                const messageBubble = document.createElement('div');
+                messageBubble.classList.add('message-bubble', 'bot-message');
+                messageBubble.innerHTML = renderMarkdownAndLinks(text);
+
+                botMessageWrapper.appendChild(messageBubble);
+                messageWrapper.appendChild(botMessageWrapper);
+            }
+
+            chatContainer.appendChild(messageWrapper);
+
+            // اسکرول کردن به پایین برای دیدن آخرین پیام
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // تابع اصلی ارسال پیام به API بک‌اند (بدون تغییر)
         async function sendMessage() {
             const message = userInput.value.trim();
 
@@ -444,17 +393,15 @@
             // 2. غیرفعال کردن ورودی و نمایش پیام وضعیت
             userInput.disabled = true;
             sendButton.disabled = true;
-            summarizeBtn.disabled = true;
             messageBox.textContent = 'در حال پردازش درخواست شما...';
             messageBox.classList.remove('hidden');
 
             try {
-                // 3. ارسال درخواست به بک‌اند (API چت اصلی)
-                const response = await fetchWithRetry(API_URL, {
+                // 3. ارسال درخواست به بک‌اند (API)
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // payload استاندارد برای فراخوانی تابع پایتون در بک‌اند
-                    body: JSON.stringify({ user_message: message }) 
+                    body: JSON.stringify({ user_message: message })
                 });
 
                 if (!response.ok) {
@@ -462,7 +409,6 @@
                 }
 
                 const data = await response.json();
-                // فرض می‌کنیم پاسخ JSON حاوی فیلد 'response' است.
                 const botResponse = data.response || "متأسفانه نتوانستم پاسخی پیدا کنم. لطفاً دوباره تلاش کنید.";
                 
                 // 4. نمایش پاسخ ربات
@@ -475,70 +421,14 @@
                 // 5. فعال‌سازی مجدد
                 userInput.disabled = false;
                 sendButton.disabled = false;
-                // فعال‌سازی مجدد دکمه خلاصه‌سازی
-                const lastBotMessage = getLastBotMessageText(); 
-                summarizeBtn.disabled = !lastBotMessage; 
-
                 messageBox.classList.add('hidden');
-                userInput.focus(); 
+                userInput.focus();
             }
         }
-
-        // تابع ایجاد و نمایش یک پیام جدید در رابط کاربری
-        function displayMessage(text, sender) {
-            const messageWrapper = document.createElement('div');
-            messageWrapper.classList.add('flex', 'p-1'); 
-
-            if (sender === 'user') {
-                const messageBubble = document.createElement('div');
-                messageBubble.classList.add('message-bubble', 'user-message');
-                const formattedText = text.replace(/\n/g, '<br>');
-                messageBubble.innerHTML = formattedText;
-                messageWrapper.appendChild(messageBubble);
-            } else {
-                // ساختار جدید برای پیام ربات: کانتینر > دکمه TTS + حباب پیام
-                const botMessageWrapper = document.createElement('div');
-                botMessageWrapper.classList.add('bot-message-wrapper');
-                
-                // 1. ساخت دکمه TTS
-                const ttsButton = document.createElement('button');
-                ttsButton.classList.add('tts-button');
-                ttsButton.setAttribute('onclick', 'speakMessage(this)');
-                ttsButton.setAttribute('title', 'خواندن پیام (TTS)');
-                ttsButton.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
-                    </svg>
-                `;
-                botMessageWrapper.appendChild(ttsButton);
-                
-                // 2. ساخت حباب پیام
-                const messageBubble = document.createElement('div');
-                messageBubble.classList.add('message-bubble', 'bot-message');
-                const formattedText = text.replace(/\n/g, '<br>');
-                messageBubble.innerHTML = formattedText;
-                botMessageWrapper.appendChild(messageBubble);
-                
-                messageWrapper.appendChild(botMessageWrapper);
-                
-                // فعال‌سازی دکمه خلاصه‌سازی پس از دریافت اولین پیام ربات
-                summarizeBtn.disabled = false;
-            }
-
-            chatContainer.appendChild(messageWrapper);
-
-            // اسکرول کردن به پایین برای دیدن آخرین پیام
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // افزودن شنونده رویداد به دکمه خلاصه‌سازی
-        summarizeBtn.addEventListener('click', summarizeLastBotMessage);
 
         // فوکوس روی کادر ورودی هنگام بارگذاری صفحه
         window.onload = () => {
             userInput.focus();
-            // غیرفعال کردن دکمه خلاصه‌سازی در شروع تا زمانی که اولین پیام ربات دریافت شود
-            summarizeBtn.disabled = true; 
         };
     </script>
 </body>
