@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>💡 چت‌بات دانشجویی هوشمند — رابط کاربری جدید</title>
+    <title>💡 چت‌بات دانشجویی هوشمند  </title>
     <!-- استفاده از CDN تیل‌ویند -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
@@ -60,7 +60,7 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
-        /* Action Buttons (TTS and Summarize) */
+        /* Action Buttons (Summarize only) */
         .action-buttons { margin-bottom: 8px; flex-wrap: wrap; }
         .action-button { 
             padding: 8px 14px; 
@@ -78,7 +78,6 @@
             background: #dcd7fa; /* Lighter Purple on hover */
         }
         .action-button.loading { cursor: not-allowed; opacity: 0.6; background: #f3f4f6; color: #9ca3af; }
-        .action-button.playing { background: var(--secondary-color); color: white; }
         .action-button:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* Custom scrollbar (Purple) */
@@ -174,10 +173,8 @@
         const devInfoMessage = document.getElementById('dev-info-message');
 
         const API_URL = '/reply';
-        const TTS_URL = '/tts';
         const SUMMARIZE_URL = '/summarize';
 
-        let audioPlayer = new Audio();
         let isDevInfoVisible = false;
 
         // --- نمایش اطلاعات توسعه‌دهنده ---
@@ -225,15 +222,9 @@
                 messageBubble.classList.add('message-bubble', 'bot-message');
                 messageBubble.innerHTML = renderMarkdownAndLinks(text);
                 
-                // Buttons: TTS and Summarize
+                // Buttons: Summarize only
                 const actionButtonsContainer = document.createElement('div');
                 actionButtonsContainer.classList.add('action-buttons', 'flex', 'gap-2', 'pl-4');
-
-                const ttsButton = document.createElement('button');
-                ttsButton.classList.add('action-button');
-                ttsButton.innerHTML = '<span class="ml-1">🔊</span> خواندن متن';
-                ttsButton.onclick = async (e) => { await playTtsForButton(e.currentTarget); };
-                actionButtonsContainer.appendChild(ttsButton);
 
                 const summarizeButton = document.createElement('button');
                 summarizeButton.classList.add('action-button');
@@ -287,72 +278,6 @@
                 userInput.disabled = false; sendButton.disabled = false;
                 messageBox.classList.add('hidden');
                 userInput.focus();
-            }
-        }
-
-        // --- TTS برای یک پیام خاص ---
-        async function playTtsForButton(button) {
-            const wrapper = button.closest('.flex.flex-col.items-start'); 
-            const messageBubble = wrapper.querySelector('.bot-message');
-            const text = messageBubble.textContent.trim().substring(0, 300);
-
-            if (!text) return;
-
-            // If playing -> Stop
-            if (button.classList.contains('playing')) {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
-                button.classList.remove('playing');
-                button.innerHTML = '<span class="ml-1">🔊</span> خواندن متن';
-                return;
-            }
-
-            // Disable buttons and show loading
-            document.querySelectorAll('.action-button').forEach(btn => btn.disabled = true);
-            button.classList.add('loading');
-            button.textContent = '⏳ در حال آماده‌سازی...';
-
-            try {
-                const resp = await fetch(TTS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text, voice: 'Kore' })
-                });
-
-                if (!resp.ok) {
-                    const txt = await resp.text();
-                    throw new Error(`TTS HTTP ${resp.status}: ${txt.substring(0,200)}`);
-                }
-
-                const audioBlob = await resp.blob();
-                const audioUrl = URL.createObjectURL(audioBlob);
-
-                audioPlayer.src = audioUrl;
-                await audioPlayer.play();
-
-                // Update playing status
-                document.querySelectorAll('.action-button').forEach(btn => btn.disabled = false);
-                button.classList.remove('loading');
-                button.classList.add('playing');
-                button.textContent = '⏹️ توقف';
-                
-                // End and pause handlers
-                const cleanup = () => {
-                    URL.revokeObjectURL(audioUrl);
-                    button.classList.remove('playing');
-                    button.innerHTML = '<span class="ml-1">🔊</span> خواندن متن';
-                    // Re-enable all buttons
-                    document.querySelectorAll('.action-button').forEach(btn => btn.disabled = false);
-                };
-                audioPlayer.onended = cleanup;
-                audioPlayer.onpause = cleanup;
-
-            } catch (err) {
-                console.error("TTS error:", err);
-                document.querySelectorAll('.action-button').forEach(btn => btn.disabled = false);
-                button.classList.remove('loading', 'playing');
-                button.innerHTML = '<span class="ml-1">❌</span> خطا در خواندن';
-                displayMessage('⚠️ خطای سرویس TTS. کنسول را بررسی کنید.', 'bot');
             }
         }
 
