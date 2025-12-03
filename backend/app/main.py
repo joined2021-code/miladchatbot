@@ -105,74 +105,55 @@ def reply(data: UserMessage):
 # --------------------------- TTS ---------------------------
 
 from fastapi.responses import StreamingResponse
-import math
 
-@app.post("/tts_debug")
-async def generate_tts_debug(data: TTSRequest):
+@app.post("/tts")
+async def generate_tts_stream(data: TTSRequest):
     global tts_model_client, SETUP_ERROR
+
     if not tts_model_client or SETUP_ERROR:
         raise HTTPException(status_code=500, detail=str(SETUP_ERROR))
+
     text_to_speak = data.text[:300]
+
     try:
+        # درخواست از مدل با حالت استریم
         response = tts_model_client.generate_content(
-            contents=[{"parts":[{"text": text_to_speak}]}],
+            contents=[{"parts": [{"text": text_to_speak}]}],
             generation_config={
                 "response_modalities": ["AUDIO"],
                 "speech_config": {
-                    "voice_config": {"prebuilt_voice_config": {"voice_name": data.voice}}
+                    "voice_config": {
+                        "prebuilt_voice_config": {
+                            "voice_name": data.voice
+                        }
+                    }
                 }
             },
-            tools=[]
+            stream=True
         )
 
-        # استخراج audio_part قابل‌تطبیق با نسخه‌های مختلف SDK
-        audio_part = None
-        candidate = getattr(response, "candidates", [None])[0]
-        parts = getattr(getattr(candidate, "content", None), "parts", []) if candidate else []
-        for p in parts:
-            inline = getattr(p, "inlineData", None) or getattr(p, "inline_data", None) or getattr(p, "inline", None)
-            if inline:
-                audio_part = inline
-                break
-        if not audio_part:
-            raise RuntimeError("audio part not found")
+        async def audio_generator():
+            """ صدا را چانک‌به‌چانک ارسال می‌کند تا Railway قطع نکند """
+            for chunk in response:
+                if not chunk or not chunk.candidates:
+                    continue
 
-        mime = getattr(audio_part, "mimeType", None) or getattr(audio_part, "mime_type", None) or ""
-        b64data = getattr(audio_part, "data", None) or getattr(audio_part, "bytes", None) or None
-        if b64data is None:
-            raise RuntimeError("audio data missing")
+                parts = chunk.candidates[0].content.parts
+                for p in parts:
+                    if hasattr(p, "inline_data") and p.inline_data:
+                        try:
+                            pcm_bytes = base64.b64decode(p.inline_data.data)
+                            wav_bytes = pcm_to_wav(pcm_bytes, 24000)
+                            yield wav_bytes
+                        except Exception:
+                            continue
 
-        # اگر WAV مستقیم است:
-        if "wav" in mime.lower():
-            wav_bytes = base64.b64decode(b64data)
-            sample_rate = 24000
-            channels = 1
-            bytes_per_sample = 2
-        else:
-            # PCM خام: استخراج نرخ از mime
-            import re
-            m = re.search(r"rate=(\d+)", mime)
-            sample_rate = int(m.group(1)) if m else 24000
-            channels = 1
-            bytes_per_sample = 2
-            pcm_bytes = base64.b64decode(b64data)
-            wav_bytes = pcm_to_wav(pcm_bytes, sample_rate)
-
-        # لاگ‌ مفصل برای دیباگ
-        print("TTS DEBUG => mime:", mime)
-        print("TTS DEBUG => wav size (bytes):", len(wav_bytes))
-        # تخمین مدت به ثانیه (بدون احتساب header 44 بایت)
-        audio_data_size = len(wav_bytes) - 44 if len(wav_bytes) > 44 else len(wav_bytes)
-        duration_sec = audio_data_size / (sample_rate * channels * bytes_per_sample)
-        print(f"TTS DEBUG => approx duration (s): {duration_sec:.3f}")
-
-        # برای تست محلی: بازگرداندن مستقیم فایل WAV (استریم)
-        return StreamingResponse(io.BytesIO(wav_bytes), media_type="audio/wav",
-                                 headers={"Content-Disposition":"inline; filename=tts_debug.wav"})
+        return StreamingResponse(audio_generator(), media_type="audio/wav")
 
     except Exception as e:
-        import traceback; traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"TTS debug failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"TTS Stream failed: {e}")
 
 # --------------------------- خلاصه‌سازی ---------------------------
 
