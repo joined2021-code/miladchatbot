@@ -104,78 +104,75 @@ def reply(data: UserMessage):
 
 # --------------------------- TTS ---------------------------
 
-@app.post("/tts")
-async def generate_tts(data: TTSRequest):
-    global tts_model_client, SETUP_ERROR
+from fastapi.responses import StreamingResponse
+import math
 
+@app.post("/tts_debug")
+async def generate_tts_debug(data: TTSRequest):
+    global tts_model_client, SETUP_ERROR
     if not tts_model_client or SETUP_ERROR:
         raise HTTPException(status_code=500, detail=str(SETUP_ERROR))
-
     text_to_speak = data.text[:300]
-
     try:
-        # درخواست به حالت استاندارد که معمولا PCM خام برمی‌گرداند
         response = tts_model_client.generate_content(
-            contents=[{"parts": [{"text": text_to_speak}]}],
+            contents=[{"parts":[{"text": text_to_speak}]}],
             generation_config={
                 "response_modalities": ["AUDIO"],
                 "speech_config": {
-                    "voice_config": {
-                        "prebuilt_voice_config": {
-                            "voice_name": data.voice
-                        }
-                    }
+                    "voice_config": {"prebuilt_voice_config": {"voice_name": data.voice}}
                 }
             },
             tools=[]
         )
 
-        # --- استخراج بخش صوتی با تحمل نام‌های فیلد مختلف ---
+        # استخراج audio_part قابل‌تطبیق با نسخه‌های مختلف SDK
         audio_part = None
-        candidate = None
-        if getattr(response, "candidates", None):
-            candidate = response.candidates[0]
-        if candidate:
-            content = getattr(candidate, "content", None)
-            parts = getattr(content, "parts", None) if content is not None else None
-            if parts:
-                for p in parts:
-                    # پشتیبانی از inlineData / inline_data و نام‌های متفاوت فیلدها
-                    inline = getattr(p, "inlineData", None) or getattr(p, "inline_data", None) or getattr(p, "inline", None)
-                    if inline:
-                        audio_part = inline
-                        break
-
+        candidate = getattr(response, "candidates", [None])[0]
+        parts = getattr(getattr(candidate, "content", None), "parts", []) if candidate else []
+        for p in parts:
+            inline = getattr(p, "inlineData", None) or getattr(p, "inline_data", None) or getattr(p, "inline", None)
+            if inline:
+                audio_part = inline
+                break
         if not audio_part:
-            raise RuntimeError("ساختار پاسخ صوتی معتبر نیست (audio part پیدا نشد).")
+            raise RuntimeError("audio part not found")
 
-        # استخراج mime (پشتیبانی از نام‌های متفاوت)
         mime = getattr(audio_part, "mimeType", None) or getattr(audio_part, "mime_type", None) or ""
-        # استخراج دادهٔ base64 (ممکن است نام فیلد 'data' باشد)
         b64data = getattr(audio_part, "data", None) or getattr(audio_part, "bytes", None) or None
         if b64data is None:
-            raise RuntimeError("بخش صوتی بدون داده یافت شد.")
+            raise RuntimeError("audio data missing")
 
-        # اگر API مستقیم WAV داده باشد (audio/wav) → مستقیم پاس کن
-        if "wav" in mime.lower() or "audio/wav" in mime.lower():
+        # اگر WAV مستقیم است:
+        if "wav" in mime.lower():
             wav_bytes = base64.b64decode(b64data)
+            sample_rate = 24000
+            channels = 1
+            bytes_per_sample = 2
         else:
-            # معمولاً مدل PCM با mime مثل: audio/L16;codec=pcm;rate=24000
-            # نرخ نمونه‌برداری را از mime استخراج می‌کنیم، در غیر اینصورت 24000
+            # PCM خام: استخراج نرخ از mime
             import re
             m = re.search(r"rate=(\d+)", mime)
             sample_rate = int(m.group(1)) if m else 24000
-
+            channels = 1
+            bytes_per_sample = 2
             pcm_bytes = base64.b64decode(b64data)
-            # تبدیل PCM خام به WAV استاندارد
             wav_bytes = pcm_to_wav(pcm_bytes, sample_rate)
 
-        return {"audio_data": base64.b64encode(wav_bytes).decode("utf-8")}
+        # لاگ‌ مفصل برای دیباگ
+        print("TTS DEBUG => mime:", mime)
+        print("TTS DEBUG => wav size (bytes):", len(wav_bytes))
+        # تخمین مدت به ثانیه (بدون احتساب header 44 بایت)
+        audio_data_size = len(wav_bytes) - 44 if len(wav_bytes) > 44 else len(wav_bytes)
+        duration_sec = audio_data_size / (sample_rate * channels * bytes_per_sample)
+        print(f"TTS DEBUG => approx duration (s): {duration_sec:.3f}")
+
+        # برای تست محلی: بازگرداندن مستقیم فایل WAV (استریم)
+        return StreamingResponse(io.BytesIO(wav_bytes), media_type="audio/wav",
+                                 headers={"Content-Disposition":"inline; filename=tts_debug.wav"})
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"TTS failed: {e}")
+        import traceback; traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"TTS debug failed: {e}")
 
 # --------------------------- خلاصه‌سازی ---------------------------
 
