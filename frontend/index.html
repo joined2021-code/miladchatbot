@@ -1,72 +1,165 @@
 <!DOCTYPE html>
-<html lang=\"fa\" dir=\"rtl\">
+<html lang="fa" dir="rtl">
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>
-    <title>💬 چت‌بات دانشجویی — رابط کاربری</title>
-    <script src=\"https://cdn.tailwindcss.com\"></script>
-    <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap\" rel=\"stylesheet\">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>💡 چت‌بات دانشجویی هوشمند — رابط کاربری جدید</title>
+    <!-- استفاده از CDN تیل‌ویند -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', Tahoma, sans-serif; background: linear-gradient(180deg,#f1f5f9 0%, #eef2ff 100%); }
-        .message-bubble { max-width:85%; padding:12px 18px; border-radius:1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.08); line-height:1.5; word-wrap:break-word; margin-bottom:4px; }
-        .user-message { background:#4f46e5; color:#fff; margin-right:0; margin-left:auto; text-align:right; border-bottom-left-radius:0.5rem; }
-        .bot-message { background:#fff; color:#1f2937; margin-right:auto; margin-left:0; text-align:right; border-bottom-right-radius:0.5rem; }
-        .bot-message-wrapper { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
-        .action-buttons { display:flex; gap:8px; margin-top:2px; margin-bottom:2px; flex-wrap:wrap; }
-        .action-button { padding:6px 10px; font-size:0.9rem; color:#4f46e5; background:#eef2ff; border-radius:12px; border:1px solid #c7d2fe; cursor:pointer; white-space:nowrap; }
-        .action-button:hover:not(:disabled) { background:#e0e7ff; }
-        .action-button.loading { cursor:not-allowed; opacity:0.6; background:#ddd; }
-        .action-button.playing { background:#4f46e5; color:white; }
-        .action-button:disabled { opacity:0.45; cursor:not-allowed; }
-        #chat-container::-webkit-scrollbar { width:8px; } 
-        #chat-container::-webkit-scrollbar-thumb { background-color:#a7b7c9; border-radius:10px; }
+        /* تعریف متغیرهای رنگی برای استفاده راحت‌تر */
+        :root {
+            --primary-color: #00bcd4; /* Teal/Cyan */
+            --primary-dark: #0097a7;
+            --secondary-color: #7c3aed; /* Deep Purple */
+            --bg-light: #f5f8ff; /* Very Light Background */
+            --bg-surface: #ffffff;
+        }
+
+        body { 
+            font-family: 'Vazirmatn', Tahoma, sans-serif; 
+            background: var(--bg-light); 
+            /* Soft background gradient */
+            background: linear-gradient(135deg, #eef2f8 0%, #e0f7fa 100%);
+        }
+        
+        .chat-main-container { 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.05); 
+            border: 1px solid #e0e0e0;
+        }
+
+        /* Message Bubbles */
+        .message-bubble { 
+            max-width: 90%; 
+            padding: 14px 20px; 
+            border-radius: 1.75rem; 
+            line-height: 1.6; 
+            word-wrap: break-word; 
+            font-size: 1rem;
+        }
+
+        /* User Message: Primary Teal */
+        .user-message { 
+            background: var(--primary-color); 
+            color: #fff; 
+            margin-left: auto; 
+            text-align: right; 
+            border-bottom-right-radius: 0.75rem; 
+            box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);
+        }
+
+        /* Bot Message: White surface */
+        .bot-message { 
+            background: var(--bg-surface); 
+            color: #1f2937; 
+            margin-right: auto; 
+            text-align: right; 
+            border-bottom-left-radius: 0.75rem; 
+            border: 1px solid #cfd8dc;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Action Buttons (TTS and Summarize) */
+        .action-buttons { margin-bottom: 8px; flex-wrap: wrap; }
+        .action-button { 
+            padding: 8px 14px; 
+            font-size: 0.85rem; 
+            color: var(--secondary-color); /* Purple */
+            background: #ede9fe; /* Light Purple Background */
+            border-radius: 0.75rem; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            font-weight: 600; 
+            box-shadow: 0 2px 4px rgba(124, 58, 237, 0.1);
+        }
+        .action-button:hover:not(:disabled) { 
+            background: #dcd7fa; /* Lighter Purple on hover */
+        }
+        .action-button.loading { cursor: not-allowed; opacity: 0.6; background: #f3f4f6; color: #9ca3af; }
+        .action-button.playing { background: var(--secondary-color); color: white; }
+        .action-button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Custom scrollbar (Purple) */
+        #chat-container::-webkit-scrollbar { width: 6px; } 
+        #chat-container::-webkit-scrollbar-thumb { background-color: var(--secondary-color); border-radius: 10px; }
+        #chat-container::-webkit-scrollbar-track { background: var(--bg-light); }
+        
+        /* FIX for VS Code error: Define custom focus style outside the element */
+        #user-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 188, 212, 0.4); /* primary color ring */
+        }
     </style>
 </head>
-<body class=\"flex items-center justify-center min-h-screen p-4\">
-    <div class=\"w-full max-w-lg bg-white rounded-3xl shadow-2xl flex flex-col h-[90vh] sm:h-[80vh] overflow-hidden ring-1 ring-gray-100\">
-        <header class=\"p-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white shadow-lg flex items-center gap-4 border-b-4 border-indigo-400\">
-            <div class=\"flex-none\">
-                <div class=\"h-12 w-12 rounded-full bg-white/30 flex items-center justify-center ring-2 ring-white/60\">
-                    <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 text-white\" viewBox=\"0 0 24 24\" fill=\"currentColor\">
-                        <path d=\"M12 2A7 7 0 0 0 5 9v3H4a1 1 0 0 0 0 2h1v1a7 7 0 0 0 14 0v-1h1a1 1 0 0 0 0-2h-1V9a7 7 0 0 0-7-7zM7 9a5 5 0 0 1 10 0v3H7V9zm5 10c-2.206 0-4-1.794-4-4h8c0 2.206-1.794 4-4 4z\"/>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-lg bg-white rounded-3xl chat-main-container flex flex-col h-[95vh] sm:h-[85vh] overflow-hidden">
+        
+        <!-- Header -->
+        <header class="p-5 bg-white border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full flex items-center justify-center ring-2 ring-opacity-50" 
+                    style="background: #e0f7fa; color: var(--primary-color); border-color: var(--primary-color);">
+                    <!-- Icon: Teal -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary-color);">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2A7 7 0 0 0 5 9v3H4a1 1 0 0 0 0 2h1v1a7 7 0 0 0 14 0v-1h1a1 1 0 0 0 0-2h-1V9a7 7 0 0 0-7-7zM7 9a5 5 0 0 1 10 0v3H7V9zm5 10c-2.206 0-4-1.794-4-4h8c0 2.206-1.794 4-4 4z"/>
                     </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold text-gray-800">چت‌بات دانشجویی هوشمند</h1>
+                    <p class="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                        <!-- Online Status: Purple -->
+                        <span class="h-2 w-2 rounded-full animate-pulse" style="background: var(--secondary-color);"></span>
+                        <span>آنلاین | مبتنی بر Gemini 2.5 Flash</span>
+                    </p>
                 </div>
             </div>
 
-            <div class=\"flex-1\">
-                <h1 class=\"text-xl font-bold leading-snug\">🧠 چت‌بات هوش مصنوعی دانشجویی</h1>
-                <p class=\"text-sm opacity-80 mt-1\">نسخه آزمایشی توسط <span class=\"font-semibold\">محمدحسین تاجیک</span> | وضعیت: آنلاین</p>
-            </div>
-
-            <div class=\"flex-none\">
-                <button title=\"درباره سازنده و پروژه\" class=\"p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition\">
-                    <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\">
-                        <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z\"/>
-                    </svg>
-                </button>
-            </div>
+            <!-- Developer Info Button: Purple -->
+            <button onclick="displayDeveloperInfo()" title="درباره سازنده و پروژه" 
+                class="p-2 rounded-full transition ring-1 ring-opacity-50"
+                style="background: #eef2ff; color: var(--secondary-color); border-color: var(--secondary-color);">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+                </svg>
+            </button>
         </header>
 
-        <div id=\"chat-container\" class=\"flex-grow p-4 overflow-y-auto space-y-3 bg-white/50\">
-            <div class=\"flex\">
-                <div class=\"bot-message message-bubble\">
-                    <strong>👋 سلام!</strong> من چت‌بات هوش مصنوعی دانشجویی هستم. طراحی شده‌ام تا به سوالات درسی، برنامه‌نویسی و پروژه‌ای شما پاسخ دهم.<br><br>
+        <!-- Chat Container -->
+        <div id="chat-container" class="flex-grow p-5 overflow-y-auto space-y-4" style="background: var(--bg-light);">
+            <!-- Welcome Message -->
+            <div class="flex">
+                <div class="bot-message message-bubble">
+                    <strong>👋 سلام!</strong> من دستیار هوشمند شما برای سوالات درسی، برنامه‌نویسی و پروژه‌های دانشگاهی هستم.<br><br>
                     <strong>چطور می‌توانم امروز کمکتان کنم؟</strong>
+                </div>
+            </div>
+            <!-- Developer Info Message (Hidden) -->
+            <div id="dev-info-message" class="flex hidden">
+                <div class="message-bubble text-sm" style="background: #fff3e0; color: #ff9800; border: 1px solid #ffcc80;">
+                    <p class="font-bold">✨ اطلاعات توسعه‌دهنده</p>
+                    <p class="mt-2">من توسط **محمدحسین تاجیک** با استفاده از هوش مصنوعی گوگل (Gemini) توسعه داده شده‌ام. هدف من کمک به رشد تحصیلی شماست. می‌تونی محمدحسین رو در اینستاگرام دنبال کنی: <a href="https://www.instagram.com/mohmels/" target="_blank" class="underline hover:opacity-80" style="color: var(--primary-dark);">https://www.instagram.com/mohmels/</a></p>
                 </div>
             </div>
         </div>
 
-        <footer class=\"p-4 border-t border-gray-200 bg-white\">
-            <div id=\"message-box\" class=\"hidden text-center p-2 text-sm font-medium bg-indigo-50 text-indigo-700 rounded-xl mb-3 ring-1 ring-indigo-200\">در حال پردازش درخواست شما...</div>
-            <div class=\"flex items-center space-x-3 space-x-reverse\">
-                <input type=\"text\" id=\"user-input\" placeholder=\"سوال خود را اینجا بنویسید (Enter)\"
-                    class=\"flex-grow p-4 text-gray-700 border-2 border-gray-200 rounded-3xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition duration-200 shadow-inner\"
-                    onkeydown=\"if(event.key === 'Enter') sendMessage()\">
-                <button onclick=\"sendMessage()\" id=\"send-button\"
-                    class=\"flex-none p-4 bg-indigo-600 text-white rounded-3xl hover:bg-indigo-700 transition duration-200 ease-in-out shadow-lg hover:shadow-xl disabled:opacity-40 disabled:hover:bg-indigo-600\"
-                    title=\"ارسال پیام (Enter)\">
-                    <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 transform -rotate-45\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\">
-                        <path d=\"M12 19l9 2-9-18-9 18 9-2zm0 0v-8\"/>
+        <!-- Footer and Input Form -->
+        <footer class="p-4 border-t border-gray-200 bg-white">
+            <!-- Error/Status Message: Teal -->
+            <div id="message-box" class="hidden text-center p-2 text-sm font-semibold rounded-xl mb-3 ring-1" style="background: #e0f7fa; color: var(--primary-dark); border-color: var(--primary-color);">در حال پردازش درخواست شما...</div>
+            <div class="flex items-center gap-3">
+                <input type="text" id="user-input" placeholder="سوال خود را اینجا بنویسید..."
+                    class="flex-grow p-4 text-gray-700 border border-gray-300 rounded-full focus:outline-none focus:ring-4 focus:ring-opacity-40 transition duration-200 shadow-sm"
+                    onkeydown="if(event.key === 'Enter') sendMessage()">
+                
+                <!-- Send Button: Primary Teal -->
+                <button onclick="sendMessage()" id="send-button"
+                    class="flex-none p-3 text-white rounded-full hover:opacity-90 transition duration-200 ease-in-out shadow-lg hover:shadow-xl disabled:opacity-40 disabled:hover:bg-opacity-100"
+                    style="background: var(--primary-color);"
+                    title="ارسال پیام (Enter)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 transform -rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                     </svg>
                 </button>
             </div>
@@ -78,18 +171,36 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const messageBox = document.getElementById('message-box');
+        const devInfoMessage = document.getElementById('dev-info-message');
 
         const API_URL = '/reply';
         const TTS_URL = '/tts';
         const SUMMARIZE_URL = '/summarize';
 
-        // --- تبدیل متن (تبدیل \n به <br>، بولد و لینک‌ها) ---
+        let audioPlayer = new Audio();
+        let isDevInfoVisible = false;
+
+        // --- نمایش اطلاعات توسعه‌دهنده ---
+        function displayDeveloperInfo() {
+            if (isDevInfoVisible) {
+                devInfoMessage.classList.add('hidden');
+            } else {
+                devInfoMessage.classList.remove('hidden');
+                chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll down
+            }
+            isDevInfoVisible = !isDevInfoVisible;
+        }
+
+
+        // --- تبدیل متن (اضافه کردن قابلیت نمایش کد) ---
         function renderMarkdownAndLinks(text) {
             let html = text.replace(/\n/g, '<br>');
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Links
             const urlRegex = /(https?:\/\/[^\s<>]+)/g;
             html = html.replace(urlRegex, (url) => {
-                return `<a href=\"${url}\" target=\"_blank\" class=\"text-indigo-600 underline hover:text-indigo-800\">${url}</a>`;
+                // Use primary color for links
+                return `<a href="${url}" target="_blank" class="underline hover:opacity-80" style="color: var(--primary-dark);">${url}</a>`;
             });
             return html;
         }
@@ -97,7 +208,7 @@
         // --- نمایش پیام در چت ---
         function displayMessage(text, sender) {
             const messageWrapper = document.createElement('div');
-            messageWrapper.classList.add('flex', 'p-1');
+            messageWrapper.classList.add('flex');
 
             if (sender === 'user') {
                 const messageBubble = document.createElement('div');
@@ -107,14 +218,181 @@
 
             } else { // bot
                 const botMessageWrapper = document.createElement('div');
-                botMessageWrapper.classList.add('bot-message-wrapper');
+                botMessageWrapper.classList.add('flex', 'flex-col', 'items-end', 'gap-2'); 
 
-                // دکمه‌ها: TTS و خلاصه‌سازی (برای هر پیام)
+                // Main Message
+                const messageBubble = document.createElement('div');
+                messageBubble.classList.add('message-bubble', 'bot-message');
+                messageBubble.innerHTML = renderMarkdownAndLinks(text);
+                
+                // Buttons: TTS and Summarize
                 const actionButtonsContainer = document.createElement('div');
-                actionButtonsContainer.classList.add('action-buttons');
+                actionButtonsContainer.classList.add('action-buttons', 'flex', 'gap-2', 'pl-4');
 
                 const ttsButton = document.createElement('button');
                 ttsButton.classList.add('action-button');
-                ttsButton.textContent = '🔊 خواندن متن';
+                ttsButton.innerHTML = '<span class="ml-1">🔊</span> خواندن متن';
                 ttsButton.onclick = async (e) => { await playTtsForButton(e.currentTarget); };
+                actionButtonsContainer.appendChild(ttsButton);
 
+                const summarizeButton = document.createElement('button');
+                summarizeButton.classList.add('action-button');
+                summarizeButton.innerHTML = '<span class="ml-1">📄</span> خلاصه‌سازی';
+                summarizeButton.onclick = async (e) => { await summarizeForButton(e.currentTarget); };
+                actionButtonsContainer.appendChild(summarizeButton);
+
+                // Layout: Buttons on top, bubble on bottom
+                botMessageWrapper.appendChild(actionButtonsContainer);
+                botMessageWrapper.appendChild(messageBubble);
+                messageWrapper.appendChild(botMessageWrapper);
+                messageWrapper.classList.add('flex-col', 'items-start'); 
+            }
+
+            chatContainer.appendChild(messageWrapper);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // --- ارسال پیام به بک‌اند و دریافت پاسخ ---
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Hide developer message when sending
+            if (isDevInfoVisible) {
+                displayDeveloperInfo(); 
+            }
+
+            displayMessage(message, 'user');
+            userInput.value = '';
+
+            userInput.disabled = true; sendButton.disabled = true;
+            messageBox.textContent = 'در حال پردازش درخواست شما...'; messageBox.classList.remove('hidden');
+
+            try {
+                const resp = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_message: message })
+                });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+                const data = await resp.json();
+                const botResponse = data.response || "متأسفانه پاسخی دریافت نشد.";
+                displayMessage(botResponse, 'bot');
+
+            } catch (err) {
+                console.error("API error:", err);
+                displayMessage('⚠️ خطا در اتصال به سرور. کنسول را بررسی کنید.', 'bot');
+            } finally {
+                userInput.disabled = false; sendButton.disabled = false;
+                messageBox.classList.add('hidden');
+                userInput.focus();
+            }
+        }
+
+        // --- TTS برای یک پیام خاص ---
+        async function playTtsForButton(button) {
+            const wrapper = button.closest('.flex.flex-col.items-start'); 
+            const messageBubble = wrapper.querySelector('.bot-message');
+            const text = messageBubble.textContent.trim().substring(0, 300);
+
+            if (!text) return;
+
+            // If playing -> Stop
+            if (button.classList.contains('playing')) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                button.classList.remove('playing');
+                button.innerHTML = '<span class="ml-1">🔊</span> خواندن متن';
+                return;
+            }
+
+            // Disable buttons and show loading
+            document.querySelectorAll('.action-button').forEach(btn => btn.disabled = true);
+            button.classList.add('loading');
+            button.textContent = '⏳ در حال آماده‌سازی...';
+
+            try {
+                const resp = await fetch(TTS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, voice: 'Kore' })
+                });
+
+                if (!resp.ok) {
+                    const txt = await resp.text();
+                    throw new Error(`TTS HTTP ${resp.status}: ${txt.substring(0,200)}`);
+                }
+
+                const audioBlob = await resp.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+
+                audioPlayer.src = audioUrl;
+                await audioPlayer.play();
+
+                // Update playing status
+                document.querySelectorAll('.action-button').forEach(btn => btn.disabled = false);
+                button.classList.remove('loading');
+                button.classList.add('playing');
+                button.textContent = '⏹️ توقف';
+                
+                // End and pause handlers
+                const cleanup = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    button.classList.remove('playing');
+                    button.innerHTML = '<span class="ml-1">🔊</span> خواندن متن';
+                    // Re-enable all buttons
+                    document.querySelectorAll('.action-button').forEach(btn => btn.disabled = false);
+                };
+                audioPlayer.onended = cleanup;
+                audioPlayer.onpause = cleanup;
+
+            } catch (err) {
+                console.error("TTS error:", err);
+                document.querySelectorAll('.action-button').forEach(btn => btn.disabled = false);
+                button.classList.remove('loading', 'playing');
+                button.innerHTML = '<span class="ml-1">❌</span> خطا در خواندن';
+                displayMessage('⚠️ خطای سرویس TTS. کنسول را بررسی کنید.', 'bot');
+            }
+        }
+
+        // --- خلاصه‌سازی برای یک پیام خاص ---
+        async function summarizeForButton(button) {
+            const wrapper = button.closest('.flex.flex-col.items-start');
+            const messageBubble = wrapper.querySelector('.bot-message');
+            const text = messageBubble.textContent.trim();
+
+            if (text.length < 50) {
+                displayMessage('⚠️ برای خلاصه‌سازی متن باید حداقل ۵۰ کاراکتر باشد.', 'bot');
+                return;
+            }
+
+            button.classList.add('loading'); button.disabled = true; const orig = button.innerHTML; button.textContent = '⏳ در حال خلاصه‌سازی...';
+
+            try {
+                const resp = await fetch(SUMMARIZE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text_to_summarize: text })
+                });
+                if (!resp.ok) {
+                    const txt = await resp.text();
+                    throw new Error(`Summarize HTTP ${resp.status}: ${txt.substring(0,200)}`);
+                }
+                const data = await resp.json();
+                const summary = data.summary || "خلاصه‌سازی موفقیت‌آمیز نبود.";
+                displayMessage('**خلاصه متن:** ' + summary, 'bot');
+
+            } catch (err) {
+                console.error("Summarize error:", err);
+                displayMessage('⚠️ خطای سرویس خلاصه‌سازی. کنسول را بررسی کنید.', 'bot');
+            } finally {
+                button.classList.remove('loading'); button.disabled = false; button.innerHTML = orig;
+            }
+        }
+
+        // Focus on load
+        window.onload = () => { userInput.focus(); };
+    </script>
+</body>
+</html>

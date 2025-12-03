@@ -1,0 +1,263 @@
+cat <<'HTML' > backend/app/static/index.html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>چت‌بات دانشجویی — رابط کاربری</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f6f8ff;
+      --card:#ffffff;
+      --primary:#5b21b6;
+      --muted:#6b7280;
+      --accent:#eef2ff;
+      --success:#10b981;
+    }
+    html,body{height:100%;margin:0;font-family:Inter, Tahoma, sans-serif;background:linear-gradient(180deg,#f8fafc 0%, #eef2ff 100%);color:#0f172a}
+    .app{max-width:960px;margin:28px auto;padding:18px;display:grid;grid-template-columns:1fr 360px;gap:20px}
+    .panel{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 6px 24px rgba(15,23,42,0.06)}
+    header.app-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#7c3aed);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .title{font-size:1.05rem;font-weight:700}
+    .subtitle{color:var(--muted);font-size:0.9rem;margin-top:4px}
+    /* chat */
+    .chat{display:flex;flex-direction:column;gap:12px;height:62vh;overflow:auto;padding:12px;border-radius:10px;background:linear-gradient(180deg,#fbfdff, #fff)}
+    .msg{max-width:78%;padding:10px 14px;border-radius:12px;line-height:1.45;box-shadow:0 4px 12px rgba(2,6,23,0.04)}
+    .msg.bot{align-self:flex-start;background:#fff;color:#0f172a;border-top-left-radius:6px}
+    .msg.user{align-self:flex-end;background:linear-gradient(90deg,#6d28d9,#7c3aed);color:white;border-top-right-radius:6px}
+    .meta{font-size:0.78rem;color:var(--muted);margin-bottom:6px}
+    .actions{display:flex;gap:8px;margin-top:8px}
+    .btn{padding:8px 10px;border-radius:10px;border:1px solid #e6e9f2;background:var(--accent);cursor:pointer;color:var(--primary);font-weight:600}
+    .btn.secondary{background:#fff;color:var(--muted);border:1px solid #eef2ff}
+    .btn.danger{background:#fee2e2;color:#b91c1c}
+    /* right panel */
+    .right-col{display:flex;flex-direction:column;gap:12px;height:82vh}
+    .controls{display:flex;gap:8px}
+    .input-row{display:flex;gap:8px;align-items:center}
+    input[type="text"]{flex:1;padding:12px;border-radius:12px;border:1px solid #e6e9f2;font-size:0.95rem}
+    button.send{background:var(--primary);color:white;padding:12px 16px;border-radius:12px;border:none;font-weight:700;cursor:pointer}
+    .small{font-size:0.84rem;color:var(--muted)}
+    .player{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;border:1px dashed #eef2ff;background:#fafafa}
+    progress{width:150px;height:10px;border-radius:6px;overflow:hidden}
+    a.link{color:var(--primary);text-decoration:none;font-weight:600}
+    footer{margin-top:12px;color:var(--muted);font-size:0.85rem;text-align:center}
+    @media(max-width:980px){.app{grid-template-columns:1fr;padding:12px}.right-col{height:auto}.chat{height:50vh}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="panel">
+      <header class="app-header">
+        <div class="logo">SC</div>
+        <div>
+          <div class="title">چت‌بات دانشجویی</div>
+          <div class="subtitle">پاسخ‌گویی به سوالات درسی و کدنویسی — نسخه آزمایشی</div>
+        </div>
+      </header>
+
+      <div id="chat" class="chat" role="log" aria-live="polite">
+        <div class="msg bot">
+          <div class="meta">ربات</div>
+          سلام! من اینجام تا کمکت کنم. سوالت رو بپرس :)
+          <div class="actions">
+            <button class="btn secondary" disabled>🔊 خواندن متن</button>
+            <button class="btn secondary" disabled>📄 خلاصه</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+        <input id="txt" type="text" placeholder="پیام خود را بنویسید (Enter)" />
+        <button id="send" class="send">ارسال</button>
+      </div>
+
+      <footer>
+        توسعه: تو | رابط: بهبود یافته — برای تجربه بهتر TTS نیاز به backend صحیح است
+      </footer>
+    </div>
+
+    <aside class="right-col">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">کنترل TTS</div>
+          <div class="small">Voice: <select id="voiceSelect"><option value="Kore">Kore</option><option value="alloy">Alloy</option></select></div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="small">پلیر</div>
+          <div class="player" id="miniPlayer" aria-hidden="false">
+            <button id="miniPlay" class="btn">▶️ پخش</button>
+            <button id="miniPause" class="btn secondary">⏸️ توقف</button>
+            <progress id="progress" value="0" max="1"></progress>
+            <div id="duration" class="small">00:00</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="small">تنظیمات</div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button id="testTTS" class="btn">تست سریع TTS</button>
+            <button id="downloadLog" class="btn secondary">دانلود لاگ</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+        <div style="font-weight:700">وضعیت</div>
+        <div class="small" id="status">آماده</div>
+        <div style="width:100%;height:1px;background:#f1f5f9;margin:6px 0"></div>
+        <div style="font-weight:700">راهنما</div>
+        <div class="small">اگر صدای کوتاه شنیدی، ابتدا backend را طبق دستورالعمل TTS استریم تنظیم کن.</div>
+      </div>
+    </aside>
+  </div>
+
+<script>
+const CHAT_ENDPOINT = '/reply';
+const TTS_ENDPOINT = '/tts';
+const SUMMARIZE_ENDPOINT = '/summarize';
+
+const chatEl = document.getElementById('chat');
+const txt = document.getElementById('txt');
+const sendBtn = document.getElementById('send');
+const voiceSelect = document.getElementById('voiceSelect');
+const testTTS = document.getElementById('testTTS');
+
+const miniPlay = document.getElementById('miniPlay');
+const miniPause = document.getElementById('miniPause');
+const progressEl = document.getElementById('progress');
+const durationEl = document.getElementById('duration');
+const statusEl = document.getElementById('status');
+
+let currentAudio = null;
+let currentUrl = null;
+let logLines = [];
+
+// utilities
+function addLog(line){ logLines.push((new Date()).toISOString() + " " + line); statusEl.textContent = line; }
+function formatSec(s){ const mm = String(Math.floor(s/60)).padStart(2,'0'); const ss = String(Math.floor(s%60)).padStart(2,'0'); return mm+':'+ss; }
+
+function renderBot(text){
+  const node = document.createElement('div');
+  node.className = 'msg bot';
+  node.innerHTML = '<div class="meta">ربات</div>' + text;
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  const ttsBtn = document.createElement('button');
+  ttsBtn.className = 'btn';
+  ttsBtn.textContent = '🔊 خواندن متن';
+  ttsBtn.onclick = () => playAudioForText(text, ttsBtn);
+  actions.appendChild(ttsBtn);
+
+  const sumBtn = document.createElement('button');
+  sumBtn.className = 'btn secondary';
+  sumBtn.textContent = '📄 خلاصه';
+  sumBtn.onclick = () => summarizeText(text);
+  actions.appendChild(sumBtn);
+
+  node.appendChild(actions);
+  chatEl.appendChild(node);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function renderUser(text){
+  const node = document.createElement('div');
+  node.className = 'msg user';
+  node.textContent = text;
+  chatEl.appendChild(node);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+// send message
+async function sendMessage(){
+  const message = txt.value.trim();
+  if(!message) return;
+  renderUser(message);
+  txt.value = '';
+  addLog('sending message to chat api');
+  try{
+    const res = await fetch(CHAT_ENDPOINT, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_message:message})});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    renderBot(data.response || 'پاسخ در دسترس نیست.');
+    addLog('got reply');
+  }catch(e){
+    addLog('chat error: '+e.message);
+    renderBot('⚠️ خطا در اتصال به سرور. کنسول را بررسی کنید.');
+  }
+}
+
+sendBtn.addEventListener('click', sendMessage);
+txt.addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendMessage(); });
+
+// summarize
+async function summarizeText(text){
+  addLog('request summarize');
+  try{
+    const res = await fetch(SUMMARIZE_ENDPOINT, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text_to_summarize:text})});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    renderBot('<strong>خلاصه:</strong><br>'+ (data.summary || 'خلاصه‌ای موجود نیست.'));
+    addLog('summarize ok');
+  }catch(e){
+    addLog('summarize error: '+e.message);
+    renderBot('⚠️ خطا در سرویس خلاصه‌سازی.');
+  }
+}
+
+// play audio for a given text using streaming /tts endpoint
+async function playAudioForText(text, triggerButton=null){
+  try{
+    if(currentAudio){
+      currentAudio.pause();
+      try{ URL.revokeObjectURL(currentUrl); }catch(e){}
+      currentAudio = null;
+      currentUrl = null;
+    }
+    addLog('requesting tts stream');
+    const resp = await fetch(TTS_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text: text, voice: voiceSelect.value})
+    });
+    if(!resp.ok){
+      const txt = await resp.text();
+      throw new Error('TTS HTTP '+resp.status+': '+txt.slice(0,200));
+    }
+    // read as blob (server should stream audio/wav)
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    currentUrl = url;
+    const audio = new Audio(url);
+    currentAudio = audio;
+
+    audio.onended = ()=>{ addLog('audio ended'); progressEl.value = 0; durationEl.textContent = '00:00'; };
+    audio.onplay = ()=>{ addLog('audio playing'); };
+    audio.ontimeupdate = ()=>{ try{ progressEl.value = audio.currentTime / Math.max(0.1, audio.duration); durationEl.textContent = formatSec(audio.currentTime); }catch(e){} };
+
+    await audio.play();
+    addLog('audio started');
+    // wire mini player controls
+    miniPlay.onclick = ()=>{ if(currentAudio) currentAudio.play(); };
+    miniPause.onclick = ()=>{ if(currentAudio) currentAudio.pause(); };
+  }catch(e){
+    addLog('tts error: '+ (e.message || e));
+    renderBot('⚠️ خطای سرویس TTS. کنسول را بررسی کنید.');
+  }
+}
+
+testTTS.addEventListener('click', ()=> playAudioForText('سلام! این یک تست صدای سریع است.'));
+
+downloadLog.addEventListener('click', ()=>{
+  const blob = new Blob([logLines.join('\n')], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'chat-log.txt'; a.click();
+});
+
+// Accessibility: focus input
+window.addEventListener('load', ()=> txt.focus());
+</script>
+</body>
+</html>
+HTML
