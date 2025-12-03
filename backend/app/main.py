@@ -114,32 +114,61 @@ async def generate_tts(data: TTSRequest):
     text_to_speak = data.text[:300]
 
     try:
+        # درخواست به حالت استاندارد که معمولا PCM خام برمی‌گرداند
         response = tts_model_client.generate_content(
-            contents=[{
-                "parts": [{"text": text_to_speak}]
-            }],
+            contents=[{"parts": [{"text": text_to_speak}]}],
             generation_config={
                 "response_modalities": ["AUDIO"],
-                "audio_config": {
-                    "voice_name": data.voice,
-                    "audio_format": "wav"
+                "speech_config": {
+                    "voice_config": {
+                        "prebuilt_voice_config": {
+                            "voice_name": data.voice
+                        }
+                    }
                 }
-            }
+            },
+            tools=[]
         )
 
+        # --- استخراج بخش صوتی با تحمل نام‌های فیلد مختلف ---
         audio_part = None
-        for part in response.candidates[0].content.parts:
-            if hasattr(part, "inline_data") and part.inline_data:
-                audio_part = part.inline_data
-                break
+        candidate = None
+        if getattr(response, "candidates", None):
+            candidate = response.candidates[0]
+        if candidate:
+            content = getattr(candidate, "content", None)
+            parts = getattr(content, "parts", None) if content is not None else None
+            if parts:
+                for p in parts:
+                    # پشتیبانی از inlineData / inline_data و نام‌های متفاوت فیلدها
+                    inline = getattr(p, "inlineData", None) or getattr(p, "inline_data", None) or getattr(p, "inline", None)
+                    if inline:
+                        audio_part = inline
+                        break
 
         if not audio_part:
-            raise RuntimeError("Could not extract inline audio data")
+            raise RuntimeError("ساختار پاسخ صوتی معتبر نیست (audio part پیدا نشد).")
 
-        if audio_part.mime_type != "audio/wav":
-            raise RuntimeError(f"Unexpected MIME type: {audio_part.mime_type}")
+        # استخراج mime (پشتیبانی از نام‌های متفاوت)
+        mime = getattr(audio_part, "mimeType", None) or getattr(audio_part, "mime_type", None) or ""
+        # استخراج دادهٔ base64 (ممکن است نام فیلد 'data' باشد)
+        b64data = getattr(audio_part, "data", None) or getattr(audio_part, "bytes", None) or None
+        if b64data is None:
+            raise RuntimeError("بخش صوتی بدون داده یافت شد.")
 
-        wav_bytes = base64.b64decode(audio_part.data)
+        # اگر API مستقیم WAV داده باشد (audio/wav) → مستقیم پاس کن
+        if "wav" in mime.lower() or "audio/wav" in mime.lower():
+            wav_bytes = base64.b64decode(b64data)
+        else:
+            # معمولاً مدل PCM با mime مثل: audio/L16;codec=pcm;rate=24000
+            # نرخ نمونه‌برداری را از mime استخراج می‌کنیم، در غیر اینصورت 24000
+            import re
+            m = re.search(r"rate=(\d+)", mime)
+            sample_rate = int(m.group(1)) if m else 24000
+
+            pcm_bytes = base64.b64decode(b64data)
+            # تبدیل PCM خام به WAV استاندارد
+            wav_bytes = pcm_to_wav(pcm_bytes, sample_rate)
 
         return {"audio_data": base64.b64encode(wav_bytes).decode("utf-8")}
 
