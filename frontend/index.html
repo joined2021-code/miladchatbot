@@ -176,66 +176,71 @@
 
         // --- TTS برای یک پیام خاص (با دکمه مربوطه) ---
         async function playTtsForButton(button) {
-            const wrapper = button.closest('.bot-message-wrapper');
-            const messageBubble = wrapper.querySelector('.bot-message');
-            const text = messageBubble.textContent.trim().substring(0, 300); // محدود به 300
+    const wrapper = button.closest('.bot-message-wrapper');
+    const messageBubble = wrapper.querySelector('.bot-message');
+    const text = messageBubble.textContent.trim().substring(0, 300);
 
-            if (!text) return;
+    if (!text) return;
 
-            // اگر در حالت پخش است => توقف
-            if (button.classList.contains('playing')) {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
-                button.classList.remove('playing');
-                button.textContent = '🔊 خواندن متن';
-                return;
-            }
+    // اگر در حال پخش است → توقف
+    if (button.classList.contains('playing')) {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+        button.classList.remove('playing');
+        button.textContent = '🔊 خواندن متن';
+        return;
+    }
 
-            // شروع لود
-            button.classList.add('loading'); button.disabled = true; button.textContent = '⏳ در حال آماده‌سازی...';
+    button.classList.add('loading');
+    button.disabled = true;
+    button.textContent = '⏳ در حال آماده‌سازی...';
 
-            try {
-                const resp = await fetch(TTS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text, voice: 'Kore' })
-                });
-                if (!resp.ok) {
-                    const txt = await resp.text();
-                    throw new Error(`TTS HTTP ${resp.status}: ${txt.substring(0,200)}`);
-                }
-                const data = await resp.json();
-                const audioBase64 = data.audio_data;
-                if (!audioBase64) throw new Error('TTS پاسخ صوتی نداشت.');
+    try {
+        const resp = await fetch(TTS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, voice: 'Kore' })
+        });
 
-                audioPlayer.src = `data:audio/wav;base64,${audioBase64}`;
-                await audioPlayer.play();
-
-                button.classList.remove('loading'); button.classList.add('playing'); button.disabled = false;
-                button.textContent = '⏹️ توقف';
-
-                // وقتی پخش تمام شد
-                audioPlayer.onended = () => {
-                    button.classList.remove('playing', 'loading');
-                    button.textContent = '🔊 خواندن متن';
-                    button.disabled = false;
-                };
-
-                // اگر کاربر پخش را متوقف کرد (pause)
-                audioPlayer.onpause = () => {
-                    button.classList.remove('playing', 'loading');
-                    button.textContent = '🔊 خواندن متن';
-                    button.disabled = false;
-                };
-
-            } catch (err) {
-                console.error("TTS error:", err);
-                button.classList.remove('loading', 'playing');
-                button.textContent = '❌ خطا در خواندن';
-                button.disabled = false;
-                displayMessage('⚠️ خطای سرویس TTS. کنسول را بررسی کنید.', 'bot');
-            }
+        if (!resp.ok) {
+            const txt = await resp.text();
+            throw new Error(`TTS HTTP ${resp.status}: ${txt.substring(0,200)}`);
         }
+
+        // دریافت WAV واقعی (نه JSON)
+        const audioBlob = await resp.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        audioPlayer.src = audioUrl;
+        await audioPlayer.play();
+
+        button.classList.remove('loading');
+        button.classList.add('playing');
+        button.disabled = false;
+        button.textContent = '⏹️ توقف';
+
+        audioPlayer.onended = () => {
+            URL.revokeObjectURL(audioUrl);
+            button.classList.remove('playing');
+            button.textContent = '🔊 خواندن متن';
+            button.disabled = false;
+        };
+
+        audioPlayer.onpause = () => {
+            URL.revokeObjectURL(audioUrl);
+            button.classList.remove('playing');
+            button.textContent = '🔊 خواندن متن';
+            button.disabled = false;
+        };
+
+    } catch (err) {
+        console.error("TTS error:", err);
+        button.classList.remove('loading', 'playing');
+        button.textContent = '❌ خطا در خواندن';
+        button.disabled = false;
+        displayMessage('⚠️ خطای سرویس TTS. کنسول را بررسی کنید.', 'bot');
+    }
+}
 
         // --- خلاصه‌سازی برای یک پیام خاص (با دکمه مربوطه) ---
         async function summarizeForButton(button) {
