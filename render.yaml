@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: student-chatbot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GAPGPT_API_KEY
+        sync: false
+      - key: GAPGPT_BASE_URL
+        value: https://api.gapgpt.app/v1
+      - key: PORT
+        value: 10000
