@@ -1,0 +1,28 @@
+[phases.setup]
+nixPkgs = ["python310"]
+
+[phases.install]
+cmds = ["pip install -r backend/requirements.txt"]
+
+[start]
+cmd = "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
+```
+
+---
+
+## 📂 ساختار نهایی پروژه شما:
+```
+your-project/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py           ← تغییر داده شد
+│   │   └── orchestrator.py   ← تغییر داده شد
+│   └── requirements.txt      ← بررسی شود
+├── frontend/
+│   └── index.html            ← تغییر داده شد
+├── Procfile                  ← 🆕 جدید
+├── railway.json              ← 🆕 جدید
+├── nixpacks.toml             ← 🆕 جدید
+├── .gitignore
+└── .env                      ← فقط لوکال (push نشود!)
