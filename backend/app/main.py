@@ -38,7 +38,7 @@ if GAPGPT_API_KEY:
         print("⚠️ خطا در مقداردهی GapGPT:", e)
         SETUP_ERROR = str(e)
 else:
-    SETUP_ERROR = "GAPGPT_API_KEY یافت نشد."
+    SETUP_ERROR = "⚠️ کلید API (GAPGPT_API_KEY) برای خلاصه‌سازی یافت نشد."
     print("⚠️ ", SETUP_ERROR)
 
 # --------------------------- اپ اصلی ---------------------------
@@ -65,6 +65,7 @@ async def serve_frontend():
 # --------------------------- چت ---------------------------
 @app.post("/reply")
 async def reply(data: UserMessage):
+    # تابع get_reply_user مدیریت خطای API Key را در خودش انجام داده و پیام خطا را برمی‌گرداند.
     return {"response": get_reply_user(data.user_message)}
 
 # --------------------------- خلاصه‌سازی ---------------------------
@@ -72,8 +73,10 @@ async def reply(data: UserMessage):
 async def summarize_text(data: SummarizeRequest):
     global summary_model_client, SETUP_ERROR
     
+    # مدیریت خطای تنظیمات اولیه برای خلاصه‌سازی
     if not summary_model_client or SETUP_ERROR:
-        raise HTTPException(status_code=500, detail=str(SETUP_ERROR))
+        # برای نمایش بهتر در فرانت‌اند، خطای 500 با جزئیات دقیق برمی‌گردد.
+        raise HTTPException(status_code=500, detail=SETUP_ERROR)
 
     prompt = f"متن زیر را به فارسی و به صورت خلاصه توضیح بده:\n\n{data.text_to_summarize}"
     
@@ -95,9 +98,11 @@ async def summarize_text(data: SummarizeRequest):
         raise Exception("پاسخ نامعتبر از مدل دریافت شد.")
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"خطا در خلاصه‌سازی: {str(e)}")
+        # مدیریت خطای API در حین خلاصه‌سازی
+        error_detail = f"⚠️ خطای API در خلاصه‌سازی: {str(e)}"
+        raise HTTPException(status_code=500, detail=error_detail)
 
-# --------------------------- تست سلامت API ---------------------------
+# --------------------------- تست سلامت API ---------------------------\
 @app.get("/health")
 async def health_check():
     return {

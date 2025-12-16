@@ -5,25 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>🤖 دستیار هوشمند دانشجویی</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        
-        body { 
-            background: #0f0f0f;
-            overflow: hidden;
-        }
-
+        * { font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        body { background: #0f0f0f; overflow: hidden; }
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4c51bf 0%, #6a3299 100%);
             position: relative;
             overflow: hidden;
         }
-
         .gradient-bg::before {
             content: '';
             position: absolute;
@@ -34,19 +24,16 @@
             background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
             animation: rotate 20s linear infinite;
         }
-
         @keyframes rotate {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-
-        .chat-container { 
+        .chat-container-main { 
             background: #1a1a1a;
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
-
         .message-bubble { 
             max-width: 75%; 
             padding: 14px 18px; 
@@ -56,20 +43,17 @@
             animation: fadeInUp 0.3s ease-out;
             position: relative;
         }
-
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         .user-message { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4c51bf 0%, #6a3299 100%);
             color: #fff; 
             margin-left: auto;
             border-bottom-right-radius: 4px;
-            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 14px rgba(76, 81, 191, 0.3);
         }
-
         .bot-message { 
             background: #2a2a2a;
             color: #e5e5e5; 
@@ -77,71 +61,88 @@
             border-bottom-left-radius: 4px;
             border: 1px solid #3a3a3a;
         }
-
         .typing-animation {
             display: inline-flex;
             gap: 4px;
             align-items: center;
         }
-
         .typing-dot {
             width: 8px;
             height: 8px;
-            background: #667eea;
+            background: #4c51bf;
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out;
         }
-
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
         @keyframes bounce {
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
-
         #chat-container::-webkit-scrollbar { width: 8px; } 
         #chat-container::-webkit-scrollbar-track { background: #1a1a1a; }
         #chat-container::-webkit-scrollbar-thumb { 
-            background: #667eea;
+            background: #4c51bf;
             border-radius: 10px; 
         }
-
         .input-glow:focus {
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.3);
         }
-
         .send-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4c51bf 0%, #6a3299 100%);
             transition: all 0.3s ease;
         }
-
         .send-button:hover:not(:disabled) {
             transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 20px rgba(76, 81, 191, 0.5);
         }
-
         .send-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-
         .action-btn {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            color: #667eea;
+            background: rgba(76, 81, 191, 0.1);
+            border: 1px solid rgba(76, 81, 191, 0.3);
+            color: #4c51bf;
             padding: 6px 12px;
             border-radius: 8px;
             font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.2s;
         }
-
         .action-btn:hover:not(:disabled) {
-            background: rgba(102, 126, 234, 0.2);
+            background: rgba(76, 81, 191, 0.2);
             transform: translateY(-2px);
         }
-
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(76, 81, 191, 0.1);
+            border: 1px solid rgba(76, 81, 191, 0.2);
+            color: #4c51bf;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0;
+        }
+        .bot-message:hover .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn:hover {
+            background: rgba(76, 81, 191, 0.2);
+            transform: scale(1.1);
+        }
+        .copy-btn.copied {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
         .status-dot {
             width: 8px;
             height: 8px;
@@ -149,27 +150,38 @@
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
-
+        .status-dot.error {
+            background: #ef4444;
+        }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
-    <div class="chat-container">
+    <div class="chat-container-main">
         <!-- Header -->
-        <header class="gradient-bg text-white p-4 relative z-10">
+        <header class="gradient-bg text-white p-4 relative z-10 shadow-lg">
             <div class="max-w-5xl mx-auto flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-2xl">
-                        🤖
+                        🎓
                     </div>
                     <div>
                         <h1 class="text-xl font-bold">دستیار هوشمند دانشجویی</h1>
                         <div class="flex items-center gap-2 text-sm opacity-90">
-                            <div class="status-dot"></div>
-                            <span>آنلاین • Powered by Grok-3-Mini</span>
+                            <div class="status-dot" id="statusDot"></div>
+                            <span id="statusText">در حال بررسی...</span>
                         </div>
                     </div>
                 </div>
@@ -186,14 +198,13 @@
             <div class="max-w-5xl mx-auto">
                 <div class="flex">
                     <div class="bot-message message-bubble">
-                        <div class="font-semibold mb-2">👋 سلام و احوال!</div>
-                        من دستیار هوشمند شما هستم که با لحن فان و جذاب به سوالاتت جواب میدم! 😎<br><br>
+                        <div class="font-semibold mb-2">👋 سلام دانشجو! </div>
+                        من دستیار هوشمند شما هستم! با لحنی دوستانه و پرانرژی به سوالات شما جواب میدم. 🚀<br><br>
                         من می‌تونم در این موارد بهت کمک کنم:<br>
-                        📚 سوالات درسی و تحصیلی<br>
-                        💻 برنامه‌نویسی و کدنویسی<br>
-                        🎯 راهنمایی‌های عمومی<br>
-                        ⏰ اطلاعات دقیق زمان و تاریخ<br><br>
-                        <strong>پس سوالت رو بپرس! 🚀</strong>
+                        <strong>📚 سوالات درسی</strong><br>
+                        <strong>💻 برنامه‌نویسی</strong><br>
+                        <strong>🎯 راهنمایی‌های عمومی</strong><br><br>
+                        فقط کافیه سوالت رو بپرسی! 😉
                     </div>
                 </div>
             </div>
@@ -202,13 +213,13 @@
         <!-- Input Area -->
         <footer class="border-t border-gray-800 bg-[#1a1a1a] p-4">
             <div class="max-w-5xl mx-auto">
-                <div id="message-box" class="hidden mb-3 p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg text-purple-300 text-sm flex items-center justify-center gap-3">
+                <div id="message-box" class="hidden mb-3 p-3 bg-indigo-900/20 border border-indigo-500/30 rounded-lg text-indigo-300 text-sm flex items-center justify-center gap-3">
                     <div class="typing-animation">
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
                     </div>
-                    <span>در حال فکر کردن...</span>
+                    <span>در حال پردازش...</span>
                 </div>
                 
                 <div class="flex items-center gap-3">
@@ -216,14 +227,14 @@
                         type="text" 
                         id="user-input" 
                         placeholder="سوالت رو بپرس..."
-                        class="input-glow flex-1 bg-[#2a2a2a] text-white border border-gray-700 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-purple-500 transition"
+                        class="input-glow flex-1 bg-[#2a2a2a] text-white border border-gray-700 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-indigo-500 transition"
                         onkeydown="if(event.key === 'Enter') sendMessage()"
                     >
                     
                     <button 
                         onclick="sendMessage()" 
                         id="send-button"
-                        class="send-button text-white p-3.5 rounded-2xl disabled:opacity-50"
+                        class="send-button text-white p-3.5 rounded-2xl transition duration-300 ease-in-out"
                         title="ارسال (Enter)"
                     >
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,11 +243,32 @@
                     </button>
                 </div>
 
-                <div class="mt-3 text-center text-xs text-gray-500">
-                    ساخته شده توسط 
-                    <a href="https://www.instagram.com/milad__gharooni/" target="_blank" class="text-purple-400 hover:text-purple-300">میلاد قارونی</a>
-                    و 
-                    <a href="https://www.instagram.com/pouya_khorasani1382/" target="_blank" class="text-purple-400 hover:text-purple-300">پویا خراسانی</a>
+                <div class="mt-3 text-center text-xs text-gray-500 space-y-2">
+                    <div class="font-semibold text-gray-400">
+                        توسعه داده شده توسط:
+                    </div>
+                    <div class="flex items-center justify-center gap-4 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-300">محمدرضا فاضلی</span>
+                            <a href="http://www.instagram.com/moha0fazeli" target="_blank" 
+                               class="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition text-xs font-medium shadow-sm hover:shadow-md">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                </svg>
+                                اینستاگرام
+                            </a>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-300">محمد ابراهیم تاجیک</span>
+                            <a href="http://www.instagram.com/mohammad10.06" target="_blank"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition text-xs font-medium shadow-sm hover:shadow-md">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                </svg>
+                                اینستاگرام
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </footer>
@@ -247,25 +279,15 @@
         <div class="bg-[#1a1a1a] border border-gray-800 rounded-2xl p-8 max-w-md w-full" onclick="event.stopPropagation()">
             <h2 class="text-2xl font-bold text-white mb-4">درباره دستیار هوشمند</h2>
             <p class="text-gray-300 leading-relaxed mb-4">
-                این چت‌بات با استفاده از مدل Grok-3-Mini و تکنولوژی‌های پیشرفته AI ساخته شده است.
+                این چت‌بات با استفاده از مدل‌های هوش مصنوعی قدرتمند طراحی شده است.
             </p>
-            <div class="bg-purple-900/20 border border-purple-500/30 p-4 rounded-xl mb-4">
-                <p class="text-sm text-gray-300">
-                    <strong class="text-white">توسعه‌دهندگان:</strong> میلاد قارونی و پویا خراسانی<br>
-                    <strong class="text-white">مدل AI:</strong> Grok-3-Mini<br>
-                    <strong class="text-white">نسخه:</strong> 3.0
+            <div class="bg-indigo-900/20 border border-indigo-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-gray-300" id="apiStatus">
+                    در حال بررسی وضعیت API...
                 </p>
             </div>
-            <div class="flex gap-3">
-                <a href="https://www.instagram.com/milad__gharooni/" target="_blank" class="flex-1 text-center py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition font-semibold">
-                    📸 میلاد
-                </a>
-                <a href="https://www.instagram.com/pouya_khorasani1382/" target="_blank" class="flex-1 text-center py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition font-semibold">
-                    📸 پویا
-                </a>
-            </div>
-            <button onclick="hideInfo()" class="mt-3 w-full py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition">
-                بستن
+            <button onclick="hideInfo()" class="mt-3 w-full py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition font-semibold">
+                متوجه شدم
             </button>
         </div>
     </div>
@@ -276,9 +298,40 @@
         const sendButton = document.getElementById('send-button');
         const messageBox = document.getElementById('message-box');
         const infoModal = document.getElementById('info-modal');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
 
+        // استفاده از بک‌اند خودتان
         const API_URL = '/reply';
         const SUMMARIZE_URL = '/summarize';
+        const HEALTH_URL = '/health';
+
+        // بررسی سلامت API هنگام بارگذاری
+        async function checkHealth() {
+            try {
+                const response = await fetch(HEALTH_URL);
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.api_configured) {
+                    statusDot.classList.remove('error');
+                    statusText.textContent = `آنلاین • ${data.model}`;
+                    document.getElementById('apiStatus').innerHTML = `
+                        <strong class="text-white">وضعیت:</strong> متصل ✅<br>
+                        <strong class="text-white">مدل:</strong> ${data.model}
+                    `;
+                } else {
+                    throw new Error('API key not configured');
+                }
+            } catch (error) {
+                statusDot.classList.add('error');
+                statusText.textContent = 'خطا در اتصال';
+                document.getElementById('apiStatus').innerHTML = `
+                    <strong class="text-white">وضعیت:</strong> خطا ❌<br>
+                    <span class="text-red-300">لطفاً API Key را در متغیرهای محیطی تنظیم کنید</span>
+                `;
+                displayMessage('⚠️ خطا: API Key پیکربندی نشده است. لطفاً GAPGPT_API_KEY را در فایل .env یا متغیرهای محیطی سرور تنظیم کنید.', 'bot');
+            }
+        }
 
         function showInfo() {
             infoModal.classList.remove('hidden');
@@ -291,9 +344,11 @@
         }
 
         function renderMarkdown(text) {
-            let html = text.replace(/\n/g, '<br>');
+            let html = text;
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            html = html.replace(/(https?:\/\/[^\s<>]+)/g, '<a href="$1" target="_blank" class="text-purple-400 underline hover:text-purple-300">$1</a>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/\n/g, '<br>');
+            html = html.replace(/(https?:\/\/[^\s<>]+)/g, '<a href="$1" target="_blank" class="text-indigo-400 underline hover:text-indigo-300">$1</a>');
             return html;
         }
 
@@ -313,19 +368,37 @@
 
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble bot-message';
+                bubble.style.position = 'relative';
                 bubble.innerHTML = renderMarkdown(text);
-
-                const actions = document.createElement('div');
-                actions.className = 'flex gap-2 mr-4';
-
-                const sumBtn = document.createElement('button');
-                sumBtn.className = 'action-btn';
-                sumBtn.innerHTML = '📄 خلاصه';
-                sumBtn.onclick = () => summarize(bubble.textContent);
-                actions.appendChild(sumBtn);
-
+                
+                // دکمه کپی
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.title = 'کپی متن';
+                copyBtn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                `;
+                copyBtn.onclick = () => copyMessageText(text, copyBtn);
+                bubble.appendChild(copyBtn);
+                
                 botWrapper.appendChild(bubble);
-                botWrapper.appendChild(actions);
+
+                // دکمه خلاصه‌سازی
+                if (text.length > 100 && !text.includes('⚠️') && !text.includes('خلاصه:')) {
+                    const actions = document.createElement('div');
+                    actions.className = 'flex gap-2 mr-4 mt-2';
+
+                    const sumBtn = document.createElement('button');
+                    sumBtn.className = 'action-btn';
+                    sumBtn.innerHTML = '📄 خلاصه کردن';
+                    sumBtn.onclick = () => summarize(text, sumBtn);
+                    actions.appendChild(sumBtn);
+
+                    botWrapper.appendChild(actions);
+                }
+
                 messageWrapper.appendChild(botWrapper);
             }
 
@@ -344,18 +417,35 @@
             messageBox.classList.remove('hidden');
 
             try {
-                const resp = await fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_message: message })
                 });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
                 
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                const data = await resp.json();
-                displayMessage(data.response || "متأسفانه پاسخی دریافت نشد.", 'bot');
-            } catch (err) {
-                console.error(err);
-                displayMessage('⚠️ خطا در اتصال. دوباره تلاش کن!', 'bot');
+                const data = await response.json();
+                const responseText = data.response || 'متأسفانه پاسخی دریافت نشد.';
+                
+                displayMessage(responseText, 'bot');
+
+            } catch (error) {
+                console.error('خطا در ارسال پیام:', error);
+                let errorMsg = '⚠️ خطا در اتصال به سرور. ';
+                
+                if (error.message.includes('500')) {
+                    errorMsg += 'لطفاً API Key را بررسی کنید.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMsg += 'لطفاً اتصال اینترنت خود را بررسی کنید.';
+                } else {
+                    errorMsg += error.message;
+                }
+                
+                displayMessage(errorMsg, 'bot');
             } finally {
                 userInput.disabled = false;
                 sendButton.disabled = false;
@@ -364,30 +454,106 @@
             }
         }
 
-        async function summarize(text) {
+        async function summarize(text, button) {
             if (text.length < 50) {
-                displayMessage('⚠️ متن خیلی کوتاهه! حداقل ۵۰ کاراکتر لازمه.', 'bot');
+                displayMessage('⚠️ متن برای خلاصه‌سازی خیلی کوتاه است (حداقل ۵۰ کاراکتر)', 'bot');
                 return;
             }
+            
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ در حال خلاصه‌سازی...';
 
             try {
-                const resp = await fetch(SUMMARIZE_URL, {
+                const response = await fetch(SUMMARIZE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text_to_summarize: text })
                 });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
                 
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                const data = await resp.json();
-                displayMessage('**📝 خلاصه:**\n\n' + data.summary, 'bot');
-            } catch (err) {
-                console.error(err);
-                displayMessage('⚠️ خطا در خلاصه‌سازی!', 'bot');
+                const data = await response.json();
+                const summary = data.summary || 'متأسفانه خلاصه‌سازی موفقیت‌آمیز نبود.';
+                
+                displayMessage('📝 **خلاصه:** ' + summary, 'bot');
+
+            } catch (error) {
+                console.error('خطا در خلاصه‌سازی:', error);
+                displayMessage('⚠️ خطا در سرویس خلاصه‌سازی: ' + error.message, 'bot');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
             }
         }
 
-        window.onload = () => userInput.focus();
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideInfo(); });
+        // اجرای بررسی سلامت هنگام بارگذاری
+        window.onload = () => {
+            userInput.focus();
+            checkHealth();
+        };
+        
+        document.addEventListener('keydown', (e) => { 
+            if (e.key === 'Escape') hideInfo(); 
+        });
+
+        // تابع کپی متن پیام
+        function copyMessageText(text, button) {
+            // حذف HTML tags و فقط متن خام
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = text;
+            const plainText = tempDiv.textContent || tempDiv.innerText || '';
+            
+            // استفاده از Clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(plainText).then(() => {
+                    showCopySuccess(button);
+                }).catch(err => {
+                    console.error('خطا در کپی:', err);
+                    fallbackCopyText(plainText, button);
+                });
+            } else {
+                fallbackCopyText(plainText, button);
+            }
+        }
+
+        // روش جایگزین برای کپی
+        function fallbackCopyText(text, button) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopySuccess(button);
+            } catch (err) {
+                console.error('خطا در کپی:', err);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // نمایش موفقیت کپی
+        function showCopySuccess(button) {
+            const originalHTML = button.innerHTML;
+            button.classList.add('copied');
+            button.innerHTML = `
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            `;
+            
+            setTimeout(() => {
+                button.classList.remove('copied');
+                button.innerHTML = originalHTML;
+            }, 2000);
+        }
     </script>
 </body>
 </html>
